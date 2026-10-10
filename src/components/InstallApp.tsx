@@ -54,26 +54,26 @@ export function InstallBanner() {
 
   return (
     <>
-      <div className="animate-fade-up relative flex items-center gap-3 rounded-2xl bg-white p-3 pr-2 shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.06)] ring-1 ring-cyan-100">
-        <img src="/icon-192.png" alt="" className="size-12 shrink-0 rounded-xl ring-1 ring-slate-200" />
+      <div className="animate-fade-up flex items-center gap-3 rounded-2xl bg-white py-2.5 pl-2.5 pr-1 shadow-sm ring-1 ring-slate-200/70">
+        <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-[10px] ring-1 ring-slate-100" />
         <div className="min-w-0 flex-1">
-          <p className="font-bold leading-tight text-slate-900">Апп татах</p>
-          <p className="mt-0.5 text-sm leading-snug text-slate-500">Нүүр дэлгэцэндээ нэмээд интернетгүй ч уншаарай</p>
+          <p className="truncate text-[15px] font-semibold leading-tight text-slate-900">Апп суулгах</p>
+          <p className="mt-0.5 truncate text-[13px] leading-tight text-slate-500">Нүүр дэлгэцэнд нэмэх</p>
         </div>
         <button
           type="button"
           onClick={install}
-          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-cyan-700 px-3.5 text-[15px] font-semibold text-white shadow-sm transition active:scale-95"
+          className="h-9 shrink-0 rounded-full bg-cyan-700 px-4 text-sm font-semibold text-white transition active:scale-95"
         >
-          <Download className="size-4" /> Татах
+          Татах
         </button>
         <button
           type="button"
           onClick={dismiss}
           aria-label="Хаах"
-          className="grid size-11 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100"
+          className="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100"
         >
-          <X className="size-5" />
+          <X className="size-4" />
         </button>
       </div>
       {help}

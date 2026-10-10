@@ -54,6 +54,11 @@ async function withFallback<T>(
 /** Loads every bulletin section in parallel. Never rejects. */
 export async function fetchBulletin(): Promise<BulletinResult> {
   const mock = buildMockData();
+  // In production an empty section stays empty instead of showing invented names.
+  const sample: BulletinData =
+    !isSupabaseConfigured || import.meta.env.DEV
+      ? mock
+      : { ...mock, announcements: [], verses: [], plans: [], duties: [], fellowship: [], cleaning: [] };
   const errors: string[] = [];
   const db = supabase;
   const today = todayISO();
@@ -77,24 +82,24 @@ export async function fetchBulletin(): Promise<BulletinResult> {
           .eq('is_active', true)
           .order('sort_order', { ascending: true })
           .order('created_at', { ascending: false }),
-      mock.announcements,
+      sample.announcements,
       errors,
     ),
-    withFallback('memory_verses', db && db.from('memory_verses').select('*').order('week_start', { ascending: true }), mock.verses, errors),
+    withFallback('memory_verses', db && db.from('memory_verses').select('*').order('week_start', { ascending: true }), sample.verses, errors),
     withFallback(
       'monthly_plans',
       db && db.from('monthly_plans').select('*').gte('event_date', firstOfMonth(today)).order('event_date').limit(120),
-      mock.plans,
+      sample.plans,
       errors,
     ),
     withFallback(
       'service_duties',
       db && db.from('service_duties').select('*').gte('week_date', addDays(today, -7)).order('week_date'),
-      mock.duties,
+      sample.duties,
       errors,
     ),
-    withFallback('fellowship_schedules', db && db.from('fellowship_schedules').select('*').order('sort_order'), mock.fellowship, errors),
-    withFallback('cleaning_schedules', db && db.from('cleaning_schedules').select('*').order('sort_order'), mock.cleaning, errors),
+    withFallback('fellowship_schedules', db && db.from('fellowship_schedules').select('*').order('sort_order'), sample.fellowship, errors),
+    withFallback('cleaning_schedules', db && db.from('cleaning_schedules').select('*').order('sort_order'), sample.cleaning, errors),
   ]);
 
   return {

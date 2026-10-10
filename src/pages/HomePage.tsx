@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronRight,
   Copy,
+  Lock,
   Megaphone,
   Share2,
   Sparkles,
@@ -56,6 +57,14 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
       </section>
 
       <VerseSection verses={verses} />
+
+      <footer className="flex flex-col items-center gap-1 pt-4 text-xs text-slate-400">
+        <p>© {new Date().getFullYear()} {churchInfo.church_name}</p>
+        {/* Deliberately faint: the only visible way into the admin panel. */}
+        <a href="#/admin" aria-label="Нэвтрэх" className="grid size-10 place-items-center rounded-full text-slate-300 transition active:text-slate-500">
+          <Lock className="size-3.5" />
+        </a>
+      </footer>
     </div>
   );
 }
@@ -63,7 +72,7 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
 /* --------------------------------------------------------- My duties */
 
 function MyDutiesCard({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
-  const { result } = useBulletin();
+  const { result, districts } = useBulletin();
   const { district, isMine } = useDistrict();
 
   const items = useMemo(() => {
@@ -93,6 +102,7 @@ function MyDutiesCard({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   }, [result, district, isMine]);
 
   if (!district) {
+    if (districts.length === 0) return null;
     return (
       <Card className="flex items-center gap-3 p-4">
         <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-700">

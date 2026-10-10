@@ -38,19 +38,19 @@ export function Header() {
           type="button"
           onClick={onLogoTap}
           aria-label="Чуулганы лого"
-          className="grid size-11 shrink-0 place-items-center active:scale-95"
+          className="grid size-10 shrink-0 place-items-center active:scale-95"
         >
-          <img src="/logo.png" alt="" className="size-11 object-contain" draggable={false} />
+          <img src="/logo.png" alt="" className="size-10 object-contain" draggable={false} />
         </button>
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-extrabold leading-tight tracking-tight text-slate-900">
+          <h1 className="truncate text-[15px] font-extrabold leading-tight tracking-tight text-slate-900">
             {info?.church_name ?? 'УВС БАПТИСТ ЧУУЛГАН'}
           </h1>
           {loading && !info ? (
             <Skeleton className="mt-1 h-4 w-40" />
           ) : (
-            <p className="truncate text-[13px] font-medium text-slate-500">
+            <p className="mt-0.5 truncate text-[12.5px] font-medium text-slate-500">
               Пастор {info?.pastor} · №{info?.issue_no} · {info && shortDate(info.issue_date)}
             </p>
           )}
@@ -60,7 +60,7 @@ export function Header() {
           type="button"
           onClick={onCall}
           aria-label="Чуулган руу залгах"
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100 transition active:scale-95"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 transition active:scale-95"
         >
           <Phone className="size-5" />
         </button>
@@ -68,7 +68,7 @@ export function Header() {
           type="button"
           onClick={() => setMapOpen(true)}
           aria-label="Байршил харах"
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100 transition active:scale-95"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 transition active:scale-95"
         >
           <MapPin className="size-5" />
         </button>
