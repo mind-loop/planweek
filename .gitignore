@@ -1,0 +1,11 @@
+node_modules
+dist
+dev-dist
+.env
+.env.local
+.env.*.local
+*.log
+.vercel
+# Database credentials — never commit
+supabase_key.txt
+*.tsbuildinfo
