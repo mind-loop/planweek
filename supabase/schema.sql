@@ -125,6 +125,19 @@ create table if not exists public.cleaning_schedules (
   created_at  timestamptz not null default now()
 );
 
+-- Preset room/area names offered as tap-to-pick tags in the admin forms.
+create table if not exists public.room_tags (
+  name        text primary key,
+  sort_order  int not null default 10,
+  created_at  timestamptz not null default now()
+);
+
+insert into public.room_tags (name, sort_order) values
+  ('Их танхим', 1), ('Бага танхим', 2), ('Залуучуудын өрөө', 3), ('Хүүхдийн өрөө', 4),
+  ('Гал тогоо', 5), ('Оффис', 6), ('Коридор', 7), ('Ариун цэврийн өрөө', 8),
+  ('Орох хаалга', 9), ('Шат', 10), ('Гадна талбай', 11)
+on conflict (name) do nothing;
+
 create index if not exists memory_verses_week_idx  on public.memory_verses (week_start);
 create index if not exists monthly_plans_date_idx  on public.monthly_plans (event_date);
 create index if not exists service_duties_week_idx on public.service_duties (week_date);
@@ -136,7 +149,7 @@ declare
 begin
   foreach t in array array[
     'church_info', 'announcements', 'memory_verses', 'monthly_plans',
-    'service_duties', 'fellowship_schedules', 'cleaning_schedules'
+    'service_duties', 'fellowship_schedules', 'cleaning_schedules', 'room_tags'
   ] loop
     execute format('alter table public.%I enable row level security', t);
 

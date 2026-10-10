@@ -22,6 +22,7 @@ import { addDays, cn } from '../lib/utils';
 import { Card, Sheet, Skeleton } from '../components/ui';
 import { ADMIN_TABLES, type FieldConfig, type TableConfig } from './adminSchema';
 import { AdminUsersPanel, type AdminRole } from './AdminUsersPanel';
+import { TagPicker } from './TagPicker';
 
 type Row = Record<string, unknown> & { id?: string | number };
 type FormValues = Record<string, string | boolean>;
@@ -295,7 +296,16 @@ function RecordForm({
               {f.label}
               {f.required && <span className="text-red-500"> *</span>}
             </label>
-            {f.type === 'textarea' || f.type === 'lines' ? (
+            {f.type === 'tags' ? (
+              <TagPicker
+                id={id}
+                required={f.required}
+                placeholder={f.placeholder}
+                value={String(values[f.key] ?? '')}
+                onChange={(v) => onChange(f.key, v)}
+                inputClass={inputClass}
+              />
+            ) : f.type === 'textarea' || f.type === 'lines' ? (
               <textarea {...common} rows={f.type === 'lines' ? 5 : 4} className={cn(inputClass, 'py-3')} />
             ) : f.type === 'select' ? (
               <select {...common} className={inputClass}>

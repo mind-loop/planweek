@@ -156,21 +156,26 @@ export function Sheet({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  // Callers usually pass an inline arrow; keeping it in a ref stops the effect below
+  // from re-running on every render, which stole focus from inputs (closing the
+  // mobile keyboard after each keystroke).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
     const prevFocus = document.activeElement as HTMLElement | null;
     document.body.style.overflow = 'hidden';
-    panelRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    panelRef.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCloseRef.current();
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', onKey);
-      prevFocus?.focus?.();
+      prevFocus?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

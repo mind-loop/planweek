@@ -3,7 +3,7 @@ import type { TableName } from '../types/database';
 import { DUTY_META, DUTY_ORDER } from '../lib/duty';
 import { shortDate, upcomingSunday } from '../lib/utils';
 
-export type FieldType = 'text' | 'textarea' | 'date' | 'number' | 'checkbox' | 'select' | 'lines';
+export type FieldType = 'text' | 'textarea' | 'date' | 'number' | 'checkbox' | 'select' | 'lines' | 'tags';
 
 export interface FieldConfig {
   key: string;
@@ -103,7 +103,7 @@ export const ADMIN_TABLES: TableConfig[] = [
       { key: 'title', label: 'Нэр', type: 'text', required: true, placeholder: 'Бэлтгэл анги' },
       { key: 'time', label: 'Цаг', type: 'text', placeholder: '18:00' },
       { key: 'speaker', label: 'Илтгэгч', type: 'text' },
-      { key: 'location', label: 'Байршил', type: 'text' },
+      { key: 'location', label: 'Байршил', type: 'tags' },
       { key: 'notes', label: 'Тэмдэглэл', type: 'textarea' },
     ],
   },
@@ -147,7 +147,7 @@ export const ADMIN_TABLES: TableConfig[] = [
         options: ['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба', 'Ням'].map((d) => ({ value: d, label: d })),
       },
       { key: 'time', label: 'Цаг', type: 'text', required: true, placeholder: '18:30' },
-      { key: 'location', label: 'Өрөө / байршил', type: 'text' },
+      { key: 'location', label: 'Өрөө / байршил', type: 'tags' },
       { key: 'leader', label: 'Удирдагч', type: 'text' },
       { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
       { key: 'sort_order', label: 'Дараалал', type: 'number', default: () => 10 },
@@ -162,7 +162,7 @@ export const ADMIN_TABLES: TableConfig[] = [
     subtitle: (r) => `${s(r.district)}-р дүүрэг`,
     fields: [
       { key: 'district', label: 'Дүүрэг', type: 'text', required: true, placeholder: '12, 31' },
-      { key: 'area', label: 'Хэсэг / өрөө', type: 'text', required: true, placeholder: 'Их танхим' },
+      { key: 'area', label: 'Хэсэг / өрөө', type: 'tags', required: true, hint: 'Хэд хэдийг сонгож болно' },
       { key: 'tasks', label: 'Хийх ажлууд', type: 'lines', hint: 'Мөр бүрт нэг ажил' },
       { key: 'notes', label: 'Тэмдэглэл', type: 'textarea' },
       { key: 'sort_order', label: 'Дараалал', type: 'number', default: () => 10 },
