@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, MapPin, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -173,7 +174,7 @@ export function Sheet({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="animate-fade-in absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
       <div
@@ -201,7 +202,8 @@ export function Sheet({
         <div className="overflow-y-auto overscroll-contain px-5 pb-5">{children}</div>
         {footer && <div className="border-t border-slate-100 px-5 py-3">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

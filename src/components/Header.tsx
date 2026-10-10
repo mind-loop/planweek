@@ -5,6 +5,7 @@ import { useDistrict } from '../context/DistrictContext';
 import { useToast } from '../context/ToastContext';
 import { cn, shortDate } from '../lib/utils';
 import { Sheet, Skeleton } from './ui';
+import { InstallButton } from './InstallApp';
 
 const ADMIN_TAP_COUNT = 5;
 
@@ -106,6 +107,7 @@ export function Header() {
           >
             <Phone className="size-5" /> {info?.phone ?? 'Залгах'}
           </button>
+          <InstallButton />
         </div>
       </Sheet>
     </header>

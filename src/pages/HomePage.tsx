@@ -11,6 +11,7 @@ import {
   Star,
 } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
+import { InstallBanner } from '../components/InstallApp';
 import { useDistrict } from '../context/DistrictContext';
 import { useToast } from '../context/ToastContext';
 import { DUTY_META, dutyWeeks } from '../lib/duty';
@@ -27,6 +28,8 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   return (
     <div className="space-y-7">
       {/* Hero */}
+      <InstallBanner />
+
       <section className="relative overflow-hidden rounded-3xl shadow-lg shadow-cyan-950/10">
         <img src="/church.jpg" alt="" className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0 bg-linear-to-t from-cyan-950/95 via-cyan-900/70 to-cyan-800/20" />
