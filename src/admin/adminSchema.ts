@@ -47,10 +47,9 @@ const cat = (v: FormValues) => String(v.category ?? '');
 
 const PLAN_CATEGORY_LABEL: Record<string, string> = {
   seminar: 'Семинар',
-  fellowship: 'Нөхөрлөл',
   word: 'Үг',
   school: 'Чуулганы сургууль',
-  service: 'Үйлчлэл',
+  fellowship: 'Нөхөрлөл',
 };
 
 /* ------------------------------------------------------------------ tables */
@@ -164,13 +163,12 @@ const plans: TableConfig = {
       label: 'Ангилал',
       type: 'choice',
       required: true,
-      default: () => 'service',
+      default: () => 'fellowship',
       options: [
         { value: 'seminar', label: 'Семинар' },
-        { value: 'fellowship', label: 'Нөхөрлөл' },
         { value: 'word', label: 'Үг' },
         { value: 'school', label: 'Чуулганы сургууль' },
-        { value: 'service', label: 'Үйлчлэл' },
+        { value: 'fellowship', label: 'Нөхөрлөл' },
       ],
     },
     {
@@ -197,7 +195,7 @@ const plans: TableConfig = {
     { key: 'location', label: 'Байршил', type: 'tags' },
     {
       key: 'notes',
-      label: (v) => (cat(v) === 'service' ? 'Тэмдэглэл' : 'Хөтөлбөр / дэлгэрэнгүй'),
+      label: 'Хөтөлбөр / дэлгэрэнгүй',
       type: 'textarea',
     },
     {
@@ -205,7 +203,6 @@ const plans: TableConfig = {
       label: 'Зураг',
       type: 'image',
       folder: 'plans',
-      showIf: (v) => cat(v) !== 'service',
     },
   ],
 };

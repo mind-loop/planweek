@@ -41,7 +41,7 @@ export interface MemoryVerse {
   created_at?: string;
 }
 
-export type PlanCategory = 'seminar' | 'fellowship' | 'service' | 'school' | 'word';
+export type PlanCategory = 'seminar' | 'word' | 'school' | 'fellowship';
 
 export interface MonthlyPlan {
   id: string;
@@ -52,7 +52,7 @@ export interface MonthlyPlan {
   speaker: string | null;
   location: string | null;
   notes: string | null;
-  /** Семинар / Нөхөрлөл / Үйлчлэл / Чуулганы сургууль / Үг */
+  /** Семинар / Үг / Чуулганы сургууль / Нөхөрлөл */
   category: PlanCategory | null;
   /** Семинар: last day (multi-day events). */
   end_date: string | null;

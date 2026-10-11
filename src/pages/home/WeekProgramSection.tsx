@@ -1,7 +1,7 @@
 import { CalendarDays, ChevronRight, GraduationCap, MapPin, UserRound } from 'lucide-react';
 import { useBulletin } from '../../context/DataContext';
 import { addDays, cn, dotDate, shortDate, todayISO, weekdayMn } from '../../lib/utils';
-import { categoryStyle, isMultiDay } from '../../components/MonthCalendar';
+import { categoryRank, categoryStyle, isMultiDay } from '../../components/MonthCalendar';
 import type { TabId } from '../../components/BottomNav';
 import { Card, SectionTitle } from '../../components/ui';
 
@@ -17,7 +17,7 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
   // Everything except seminars (those get the banner); each item shows its category colour.
   const fellowship = plans
     .filter((p) => p.category !== 'seminar' && p.event_date >= today && p.event_date <= until)
-    .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.time ?? '').localeCompare(b.time ?? ''));
+    .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.time ?? '').localeCompare(b.time ?? '') || categoryRank(a.category) - categoryRank(b.category));
   // A multi-day seminar this week explains quiet days, so show it on top.
   const seminars = plans.filter((p) => p.category === 'seminar' && isMultiDay(p) && p.event_date <= until && p.end_date! >= today);
 

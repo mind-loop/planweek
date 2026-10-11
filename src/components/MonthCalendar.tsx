@@ -4,11 +4,16 @@ import type { MonthlyPlan, PlanCategory } from '../types/database';
 
 export const CATEGORY_COLORS: Record<PlanCategory, { chip: string; dot: string; label: string }> = {
   seminar: { chip: 'bg-indigo-100 text-indigo-800', dot: 'bg-indigo-500', label: 'Семинар' },
-  fellowship: { chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500', label: 'Нөхөрлөл' },
   word: { chip: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500', label: 'Үг' },
   school: { chip: 'bg-sky-100 text-sky-800', dot: 'bg-sky-500', label: 'Чуулганы сургууль' },
-  service: { chip: 'bg-amber-100 text-amber-900', dot: 'bg-amber-500', label: 'Үйлчлэл' },
+  fellowship: { chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500', label: 'Нөхөрлөл' },
 };
+/** Display order: Семинар, Үг, Чуулганы сургууль, Нөхөрлөл (then uncategorised). */
+export const categoryRank = (c: PlanCategory | null) => {
+  const i = c ? Object.keys(CATEGORY_COLORS).indexOf(c) : -1;
+  return i < 0 ? 99 : i;
+};
+
 const NO_CATEGORY = { chip: 'bg-slate-100 text-slate-700', dot: 'bg-slate-400', label: 'Бусад' };
 export const categoryStyle = (c: PlanCategory | null) => (c ? CATEGORY_COLORS[c] : NO_CATEGORY);
 
@@ -21,7 +26,7 @@ export function plansByDate(plans: MonthlyPlan[]): Map<string, MonthlyPlan[]> {
     const last = p.end_date && p.end_date > p.event_date ? p.end_date : p.event_date;
     for (let d = p.event_date; d <= last; d = addDays(d, 1)) map.set(d, [...(map.get(d) ?? []), p]);
   }
-  for (const list of map.values()) list.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
+  for (const list of map.values()) list.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? '') || categoryRank(a.category) - categoryRank(b.category));
   return map;
 }
 

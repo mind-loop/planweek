@@ -93,11 +93,11 @@ export function buildMockData(): BulletinData {
     ],
 
     plans: [
-      { id: 'p1', event_date: addDays(month, 3), title: 'Удирдагчдын хурал', time: '19:00', speaker: 'Ж.Билгүүн', location: 'Оффис', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
-      { id: 'p2', event_date: sun, title: 'Эзний өдрийн цуглаан', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
-      { id: 'p3', event_date: addDays(sun, 3), title: 'Бэлтгэл анги', time: '18:00', speaker: 'Б.Мөнх-Эрдэнэ', location: 'Бага танхим', notes: 'Баптисм хүртэх хүсэлтэй хүмүүст', category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p1', event_date: addDays(month, 3), title: 'Удирдагчдын хурал', time: '19:00', speaker: 'Ж.Билгүүн', location: 'Оффис', notes: null, category: 'fellowship', end_date: null, group_name: null, image_url: null },
+      { id: 'p2', event_date: sun, title: 'Эзний өдрийн цуглаан', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'word', end_date: null, group_name: null, image_url: null },
+      { id: 'p3', event_date: addDays(sun, 3), title: 'Бэлтгэл анги', time: '18:00', speaker: 'Б.Мөнх-Эрдэнэ', location: 'Бага танхим', notes: 'Баптисм хүртэх хүсэлтэй хүмүүст', category: 'school', end_date: null, group_name: null, image_url: null },
       { id: 'p4', event_date: addDays(sun, 13), title: 'Библийн нэгдсэн семинар', time: '10:00–15:00', speaker: 'Зочин багш', location: 'Их танхим', notes: null, category: 'seminar', end_date: addDays(sun, 18), group_name: null, image_url: null },
-      { id: 'p5', event_date: addDays(sun, 14), title: 'Эзний зоог', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p5', event_date: addDays(sun, 14), title: 'Эзний зоог', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'word', end_date: null, group_name: null, image_url: null },
       { id: 'p6', event_date: addDays(sun, 20), title: 'Ээжүүдийн тусгай уулзалт', time: '14:00', speaker: 'Д.Оюунаа', location: '2 давхар', notes: null, category: 'fellowship', end_date: null, group_name: null, image_url: null },
     ],
 
