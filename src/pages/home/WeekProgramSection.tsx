@@ -1,13 +1,13 @@
 import { CalendarDays, ChevronRight, GraduationCap, MapPin, UserRound } from 'lucide-react';
 import { useBulletin } from '../../context/DataContext';
-import { addDays, cn, dotDate, shortDate, todayISO, weekdayMn } from '../../lib/utils';
+import { addDays, cn, dotDate, longDate, parseISODate, todayISO, weekdayMn } from '../../lib/utils';
 import { categoryRank, categoryStyle, isMultiDay } from '../../components/MonthCalendar';
 import type { TabId } from '../../components/BottomNav';
-import { Card, SectionTitle } from '../../components/ui';
+import { SectionTitle } from '../../components/ui';
 
 const DAYS_AHEAD = 7; // today + the next 7 days (Sunday → next Sunday)
 
-/** 7 хоногийн хөтөлбөр — every day from today to next Sunday; Үг, сургууль, нөхөрлөл under each. */
+/** 7 хоногийн хөтөлбөр — one block per day (only days with something on), today first. */
 export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   const { result } = useBulletin();
   const today = todayISO();
@@ -15,16 +15,20 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
   const plans = result?.data.plans ?? [];
 
   // Everything except seminars (those get the banner); each item shows its category colour.
-  const fellowship = plans
+  const items = plans
     .filter((p) => p.category !== 'seminar' && p.event_date >= today && p.event_date <= until)
-    .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.time ?? '').localeCompare(b.time ?? '') || categoryRank(a.category) - categoryRank(b.category));
+    .sort(
+      (a, b) =>
+        a.event_date.localeCompare(b.event_date) ||
+        (a.time ?? '').localeCompare(b.time ?? '') ||
+        categoryRank(a.category) - categoryRank(b.category),
+    );
   // A multi-day seminar this week explains quiet days, so show it on top.
   const seminars = plans.filter((p) => p.category === 'seminar' && isMultiDay(p) && p.event_date <= until && p.end_date! >= today);
 
-  if (fellowship.length === 0 && seminars.length === 0) return null;
+  if (items.length === 0 && seminars.length === 0) return null;
 
-  // Only days that actually have something on.
-  const days = Array.from({ length: DAYS_AHEAD + 1 }, (_, i) => addDays(today, i)).filter((d) => fellowship.some((p) => p.event_date === d));
+  const days = [...new Set(items.map((p) => p.event_date))];
 
   return (
     <section>
@@ -37,14 +41,14 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
           </button>
         }
       />
-      <p className="-mt-1 mb-2 px-1 text-sm text-slate-500">
-        {shortDate(today)} – {shortDate(until)} хүртэлх хөтөлбөр
+      <p className="-mt-1 mb-3 px-1 text-sm text-slate-500">
+        {longDate(today)} – {longDate(until)}
       </p>
 
-      <Card className="overflow-hidden">
+      <div className="space-y-3">
         {seminars.map((s) => (
-          <div key={s.id} className="flex items-center gap-3 bg-indigo-50 px-4 py-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">
+          <div key={s.id} className="flex items-center gap-3 rounded-3xl bg-indigo-50 px-4 py-3.5 ring-1 ring-indigo-100">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-indigo-600 text-white">
               <GraduationCap className="size-5" />
             </span>
             <div className="min-w-0">
@@ -57,45 +61,57 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
           </div>
         ))}
 
-        {days.map((date, i) => {
-          const list = fellowship.filter((p) => p.event_date === date);
+        {days.map((date) => {
           const isToday = date === today;
+          const list = items.filter((p) => p.event_date === date);
           return (
-            <div key={date} className={cn((i > 0 || seminars.length > 0) && 'border-t border-slate-100')}>
-              <p className={cn('px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-wider', isToday ? 'text-cyan-700' : 'text-slate-500')}>
-                {isToday ? 'Өнөөдөр' : weekdayMn(date)} · {shortDate(date)}
-              </p>
-              <ul>
-                {list.map((p) => (
-                  <li key={p.id} className="flex gap-3 px-4 py-2.5">
-                    <span className="w-12 shrink-0 pt-0.5 text-[15px] font-bold text-slate-900">{p.time?.split(/[–-]/)[0] ?? '—'}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold leading-snug text-slate-900">{p.title}</p>
-                      <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold', categoryStyle(p.category).chip)}>
-                        {categoryStyle(p.category).label}
-                      </span>
-                      {(p.speaker || p.location) && (
-                        <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-slate-500">
-                          {p.speaker && (
-                            <span className="inline-flex items-center gap-1">
-                              <UserRound className="size-3.5" /> {p.speaker}
-                            </span>
-                          )}
-                          {p.location && (
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="size-3.5" /> {p.location}
-                            </span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
+            <div key={date} className="flex gap-3 rounded-3xl bg-white p-3 shadow-soft">
+              {/* Date tile */}
+              <div
+                className={cn(
+                  'flex w-14 shrink-0 flex-col items-center justify-center self-start rounded-2xl py-2.5',
+                  isToday ? 'bg-cyan-700 text-white' : 'bg-slate-100 text-slate-800',
+                )}
+              >
+                <span className="text-2xl font-bold leading-none">{parseISODate(date).getDate()}</span>
+                <span className={cn('mt-1 text-[11px] font-semibold', isToday ? 'text-cyan-100' : 'text-slate-500')}>
+                  {isToday ? 'Өнөөдөр' : weekdayMn(date)}
+                </span>
+              </div>
+
+              {/* That day's programme */}
+              <ul className="min-w-0 flex-1 divide-y divide-slate-100">
+                {list.map((p) => {
+                  const cat = categoryStyle(p.category);
+                  return (
+                    <li key={p.id} className="py-2 first:pt-1 last:pb-1">
+                      <p className="flex items-baseline gap-2">
+                        <span className="shrink-0 text-[15px] font-bold tabular-nums text-slate-900">{p.time?.split(/[–-]/)[0] ?? '—'}</span>
+                        <span className="min-w-0 font-semibold leading-snug text-slate-900">{p.title}</span>
+                      </p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[13px] text-slate-500">
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <span className={cn('size-2 rounded-full', cat.dot)} /> {cat.label}
+                        </span>
+                        {p.speaker && (
+                          <span className="inline-flex items-center gap-1">
+                            <UserRound className="size-3.5" /> {p.speaker}
+                          </span>
+                        )}
+                        {p.location && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="size-3.5" /> {p.location}
+                          </span>
+                        )}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           );
         })}
-      </Card>
+      </div>
     </section>
   );
 }
