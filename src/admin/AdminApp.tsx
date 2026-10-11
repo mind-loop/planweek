@@ -26,6 +26,7 @@ import { PlanFilesPanel } from './PlanFilesPanel';
 import { DutyGridPanel, SeminarGridPanel } from './DutyGridPanel';
 import { CleaningAreasPanel } from './CleaningAreasPanel';
 import { PlanCalendarPanel } from './PlanCalendarPanel';
+import { NationalSeminarsPanel } from './NationalSeminarsPanel';
 import { RecurringFillButton } from './RecurringFill';
 
 export type Row = Record<string, unknown> & { id?: string | number };
@@ -234,7 +235,9 @@ function AdminDashboard({ email }: { email: string }) {
       )}
 
       {'panel' in section ? (
-        section.panel === 'planCalendar' ? (
+        section.panel === 'national' ? (
+          <NationalSeminarsPanel />
+        ) : section.panel === 'planCalendar' ? (
           <PlanCalendarPanel />
         ) : section.panel === 'cleaning' ? (
           <CleaningAreasPanel />

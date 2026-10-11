@@ -210,19 +210,6 @@ const plans: TableConfig = {
   ],
 };
 
-const nationalSeminars: TableConfig = {
-  table: 'national_seminars',
-  label: 'Бүх чуулганы семинар',
-  orderBy: { column: 'start_date', ascending: false },
-  title: (r) => s(r.churches),
-  subtitle: (r) => `${dotDate(s(r.start_date))} – ${dotDate(s(r.end_date))}`,
-  fields: [
-    { key: 'start_date', label: 'Эхлэх огноо', type: 'date', required: true },
-    { key: 'end_date', label: 'Дуусах огноо', type: 'date', required: true },
-    { key: 'churches', label: 'Чуулганууд', type: 'textarea', required: true, placeholder: 'Баянхонгор, Булган, Увс', hint: 'Таслалаар тусгаарлана' },
-    { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
-  ],
-};
 
 
 
@@ -233,13 +220,12 @@ export const ADMIN_TABLES: TableConfig[] = [
   banners,
   verses,
   plans,
-  nationalSeminars,
 ];
 
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' });
 
 export interface AdminGroup {
   id: string;
@@ -267,7 +253,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     sections: [
       { id: 'plans', label: 'Календарь', panel: 'planCalendar' },
       { id: 'files', label: 'Сарын файл', panel: 'files' },
-      { id: 'national', label: 'Бүх чуулган', table: nationalSeminars },
+      { id: 'national', label: 'Бүх чуулган', panel: 'national' },
     ],
   },
   {

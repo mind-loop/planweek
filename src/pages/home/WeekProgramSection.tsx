@@ -23,7 +23,8 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
 
   if (fellowship.length === 0 && seminars.length === 0) return null;
 
-  const days = Array.from({ length: DAYS_AHEAD + 1 }, (_, i) => addDays(today, i));
+  // Only days that actually have something on.
+  const days = Array.from({ length: DAYS_AHEAD + 1 }, (_, i) => addDays(today, i)).filter((d) => fellowship.some((p) => p.event_date === d));
 
   return (
     <section>
@@ -61,47 +62,36 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
           const isToday = date === today;
           return (
             <div key={date} className={cn((i > 0 || seminars.length > 0) && 'border-t border-slate-100')}>
-              {list.length === 0 ? (
-                <p className="flex items-center justify-between px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-300">
-                  <span>
-                    {isToday ? 'Өнөөдөр' : weekdayMn(date)} · {shortDate(date)}
-                  </span>
-                  <span className="font-medium normal-case tracking-normal">—</span>
-                </p>
-              ) : (
-                <>
-                  <p className={cn('px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-wider', isToday ? 'text-cyan-700' : 'text-slate-500')}>
-                    {isToday ? 'Өнөөдөр' : weekdayMn(date)} · {shortDate(date)}
-                  </p>
-                  <ul>
-                    {list.map((p) => (
-                      <li key={p.id} className="flex gap-3 px-4 py-2.5">
-                        <span className="w-12 shrink-0 pt-0.5 text-[15px] font-bold text-slate-900">{p.time?.split(/[–-]/)[0] ?? '—'}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold leading-snug text-slate-900">{p.title}</p>
-                          <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold', categoryStyle(p.category).chip)}>
-                            {categoryStyle(p.category).label}
-                          </span>
-                          {(p.speaker || p.location) && (
-                            <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-slate-500">
-                              {p.speaker && (
-                                <span className="inline-flex items-center gap-1">
-                                  <UserRound className="size-3.5" /> {p.speaker}
-                                </span>
-                              )}
-                              {p.location && (
-                                <span className="inline-flex items-center gap-1">
-                                  <MapPin className="size-3.5" /> {p.location}
-                                </span>
-                              )}
-                            </p>
+              <p className={cn('px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-wider', isToday ? 'text-cyan-700' : 'text-slate-500')}>
+                {isToday ? 'Өнөөдөр' : weekdayMn(date)} · {shortDate(date)}
+              </p>
+              <ul>
+                {list.map((p) => (
+                  <li key={p.id} className="flex gap-3 px-4 py-2.5">
+                    <span className="w-12 shrink-0 pt-0.5 text-[15px] font-bold text-slate-900">{p.time?.split(/[–-]/)[0] ?? '—'}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold leading-snug text-slate-900">{p.title}</p>
+                      <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold', categoryStyle(p.category).chip)}>
+                        {categoryStyle(p.category).label}
+                      </span>
+                      {(p.speaker || p.location) && (
+                        <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-slate-500">
+                          {p.speaker && (
+                            <span className="inline-flex items-center gap-1">
+                              <UserRound className="size-3.5" /> {p.speaker}
+                            </span>
                           )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+                          {p.location && (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="size-3.5" /> {p.location}
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           );
         })}
