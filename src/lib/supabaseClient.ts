@@ -90,7 +90,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     withFallback('memory_verses', db && db.from('memory_verses').select('*').order('week_start', { ascending: true }), sample.verses, errors),
     withFallback(
       'monthly_plans',
-      db && db.from('monthly_plans').select('*').gte('event_date', firstOfMonth(today)).order('event_date').limit(120),
+      db && db.from('monthly_plans').select('*').gte('event_date', firstOfMonth(addDays(firstOfMonth(today), -1))).order('event_date').limit(500),
       sample.plans,
       errors,
     ),

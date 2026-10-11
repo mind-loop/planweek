@@ -25,11 +25,12 @@ import { TagPicker } from './TagPicker';
 import { PlanFilesPanel } from './PlanFilesPanel';
 import { DutyGridPanel, SeminarGridPanel } from './DutyGridPanel';
 import { CleaningAreasPanel } from './CleaningAreasPanel';
+import { PlanCalendarPanel } from './PlanCalendarPanel';
 import { RecurringFillButton } from './RecurringFill';
 
-type Row = Record<string, unknown> & { id?: string | number };
+export type Row = Record<string, unknown> & { id?: string | number };
 
-const inputClass =
+export const inputClass =
   'w-full min-h-12 rounded-xl border border-slate-300 bg-white px-3.5 text-base text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-4 focus:ring-cyan-600/15';
 
 function exitAdmin() {
@@ -233,7 +234,9 @@ function AdminDashboard({ email }: { email: string }) {
       )}
 
       {'panel' in section ? (
-        section.panel === 'cleaning' ? (
+        section.panel === 'planCalendar' ? (
+          <PlanCalendarPanel />
+        ) : section.panel === 'cleaning' ? (
           <CleaningAreasPanel />
         ) : section.panel === 'seminarGrid' ? (
           <SeminarGridPanel />
@@ -258,7 +261,7 @@ function AdminDashboard({ email }: { email: string }) {
 const labelOf = (f: FieldConfig, v: FormValues) => (typeof f.label === 'function' ? f.label(v) : f.label);
 const isVisible = (f: FieldConfig, v: FormValues) => !f.showIf || f.showIf(v);
 
-function toFormValues(fields: FieldConfig[], row: Row | null): FormValues {
+export function toFormValues(fields: FieldConfig[], row: Row | null): FormValues {
   const values: FormValues = {};
   for (const f of fields) {
     const raw = row ? row[f.key] : f.default?.();
@@ -269,7 +272,7 @@ function toFormValues(fields: FieldConfig[], row: Row | null): FormValues {
   return values;
 }
 
-function toPayload(fields: FieldConfig[], values: FormValues): Row {
+export function toPayload(fields: FieldConfig[], values: FormValues): Row {
   const out: Row = {};
   for (const f of fields) {
     const v = values[f.key];
@@ -290,21 +293,21 @@ function toPayload(fields: FieldConfig[], values: FormValues): Row {
 }
 
 /** Postgres errors → plain Mongolian where we know the cause. */
-function friendlyError(message: string): string {
+export function friendlyError(message: string): string {
   if (message.includes('end_after_start')) return 'Дуусах огноо эхлэх огнооноос өмнө байна';
   if (message.includes('row-level security')) return 'Танд энэ үйлдлийг хийх эрх алга';
   return message;
 }
 
 /** Image URLs a save replaced or cleared — safe to delete from storage afterwards. */
-function droppedImages(fields: FieldConfig[], before: Row | null, after: Row): string[] {
+export function droppedImages(fields: FieldConfig[], before: Row | null, after: Row): string[] {
   if (!before) return [];
   return fields
     .filter((f) => f.type === 'image' && typeof before[f.key] === 'string' && before[f.key] && before[f.key] !== after[f.key])
     .map((f) => before[f.key] as string);
 }
 
-function RecordForm({
+export function RecordForm({
   fields,
   values,
   onChange,
@@ -400,7 +403,7 @@ function RecordForm({
   );
 }
 
-function SaveButton({ busy, form }: { busy: boolean; form: string }) {
+export function SaveButton({ busy, form }: { busy: boolean; form: string }) {
   return (
     <button
       type="submit"
