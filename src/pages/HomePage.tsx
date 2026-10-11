@@ -104,7 +104,7 @@ function MyDutiesCard({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
       .map((s) => ({
         key: s.id,
         icon: SEMINAR_DUTY_META[s.duty_type].icon,
-        tint: SEMINAR_DUTY_META[s.duty_type].tint,
+        tint: 'bg-linear-to-br from-indigo-500 to-violet-600 text-white ring-indigo-200',
         title: `Семинар: ${SEMINAR_DUTY_META[s.duty_type].label}`,
         sub: `${weekdayMn(s.day_date)} · ${shortDate(s.day_date)}`,
         tab: 'duty' as TabId,

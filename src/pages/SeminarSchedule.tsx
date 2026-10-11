@@ -17,13 +17,13 @@ export function SeminarSchedule() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-3 rounded-2xl bg-linear-to-br from-cyan-700 to-cyan-900 p-4 text-white shadow-md shadow-cyan-950/15">
+      <div className="mb-4 flex items-center gap-3 rounded-2xl bg-linear-to-br from-indigo-600 via-violet-700 to-indigo-900 p-4 text-white shadow-md shadow-indigo-950/20">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15">
           <GraduationCap className="size-6" />
         </span>
         <div>
           <h3 className="text-[17px] font-bold leading-tight">Монгол чуулганы Библийн семинар</h3>
-          <p className="mt-0.5 text-sm text-cyan-100">Аль чуулган хэзээ оролцох вэ</p>
+          <p className="mt-0.5 text-sm text-indigo-100">Аль чуулган хэзээ оролцох вэ</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
     <li
       className={cn(
         'animate-fade-up flex gap-3 rounded-2xl bg-white p-3.5 shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.05)] ring-1',
-        ours ? 'ring-2 ring-cyan-600' : 'ring-slate-200/70',
+        ours ? 'ring-2 ring-indigo-500' : 'ring-slate-200/70',
         past && 'opacity-55',
       )}
       style={{ animationDelay: `${delay}ms` }}
@@ -60,16 +60,16 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
       <div
         className={cn(
           'flex w-[76px] shrink-0 flex-col items-center justify-center rounded-xl py-2 text-center',
-          ours ? 'bg-cyan-700 text-white' : 'bg-slate-100 text-slate-800',
+          ours ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800',
         )}
       >
         <span className="text-[17px] font-extrabold leading-none">{dotDate(seminar.start_date)}</span>
-        <span className={cn('text-[11px] font-semibold', ours ? 'text-cyan-100' : 'text-slate-500')}>
+        <span className={cn('text-[11px] font-semibold', ours ? 'text-indigo-100' : 'text-slate-500')}>
           {weekdayShort(seminar.start_date)}
         </span>
-        <span className={cn('my-0.5 h-3 w-px', ours ? 'bg-cyan-300' : 'bg-slate-300')} aria-hidden />
+        <span className={cn('my-0.5 h-3 w-px', ours ? 'bg-indigo-300' : 'bg-slate-300')} aria-hidden />
         <span className="text-[17px] font-extrabold leading-none">{dotDate(seminar.end_date)}</span>
-        <span className={cn('text-[11px] font-semibold', ours ? 'text-cyan-100' : 'text-slate-500')}>
+        <span className={cn('text-[11px] font-semibold', ours ? 'text-indigo-100' : 'text-slate-500')}>
           {weekdayShort(seminar.end_date)}
         </span>
       </div>
@@ -77,7 +77,7 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
       <div className="min-w-0 flex-1 py-0.5">
         {(ours || live) && (
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {ours && <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-bold text-cyan-800">Манай чуулган</span>}
+            {ours && <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">Манай чуулган</span>}
             {live && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
                 <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" /> Явагдаж байна
