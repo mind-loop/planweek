@@ -45,7 +45,13 @@ export interface TableConfig {
 const s = (v: unknown) => (v == null ? '' : String(v));
 const cat = (v: FormValues) => String(v.category ?? '');
 
-const PLAN_CATEGORY_LABEL: Record<string, string> = { seminar: 'Семинар', fellowship: 'Нөхөрлөл', service: 'Үйлчлэл' };
+const PLAN_CATEGORY_LABEL: Record<string, string> = {
+  seminar: 'Семинар',
+  fellowship: 'Нөхөрлөл',
+  word: 'Үг',
+  school: 'Чуулганы сургууль',
+  service: 'Үйлчлэл',
+};
 
 /* ------------------------------------------------------------------ tables */
 
@@ -84,7 +90,7 @@ const announcements: TableConfig = {
       label: 'Төрөл',
       type: 'choice',
       default: () => '',
-      hint: '«Онцлох» ба «Семинар» нүүрний баннерт гарна',
+      hint: '«Онцлох», «Семинар» зарлалын жагсаалтын эхэнд гарна',
       options: [
         { value: '', label: 'Энгийн' },
         { value: 'featured', label: 'Онцлох' },
@@ -97,6 +103,30 @@ const announcements: TableConfig = {
     { key: 'body', label: 'Дэлгэрэнгүй', type: 'textarea' },
     { key: 'event_date', label: 'Огноо', type: 'date' },
     { key: 'image_url', label: 'Зураг', type: 'image', folder: 'announcements' },
+    { key: 'is_active', label: 'Апп дээр харуулах', type: 'checkbox', default: () => true },
+  ],
+};
+
+const banners: TableConfig = {
+  table: 'banners',
+  label: 'Баннер',
+  orderBy: { column: 'sort_order', ascending: true },
+  title: (r) => s(r.title) || 'Баннер',
+  subtitle: (r) =>
+    [
+      !r.is_active && 'Нуусан',
+      r.start_date || r.end_date ? `${r.start_date ? dotDate(s(r.start_date)) : '…'} – ${r.end_date ? dotDate(s(r.end_date)) : '…'}` : 'Үргэлж',
+      r.link_url && 'Холбоостой',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  fields: [
+    { key: 'image_url', label: 'Баннер зураг', type: 'image', folder: 'banners', required: true, hint: '16:9 хэмжээтэй (ж: 1600×900) зураг хамгийн сайн харагдана' },
+    { key: 'title', label: 'Тайлбар', type: 'text', placeholder: 'Заавал биш' },
+    { key: 'link_url', label: 'Дарахад нээх холбоос', type: 'text', placeholder: 'https://… (заавал биш)', hint: 'Хоосон бол зураг томоор нээгдэнэ' },
+    { key: 'start_date', label: 'Харуулж эхлэх', type: 'date' },
+    { key: 'end_date', label: 'Харуулж дуусах', type: 'date' },
+    { key: 'sort_order', label: 'Дараалал', type: 'number', default: () => 10, hint: 'Бага тоо түрүүнд' },
     { key: 'is_active', label: 'Апп дээр харуулах', type: 'checkbox', default: () => true },
   ],
 };
@@ -138,6 +168,8 @@ const plans: TableConfig = {
       options: [
         { value: 'seminar', label: 'Семинар' },
         { value: 'fellowship', label: 'Нөхөрлөл' },
+        { value: 'word', label: 'Үг' },
+        { value: 'school', label: 'Чуулганы сургууль' },
         { value: 'service', label: 'Үйлчлэл' },
       ],
     },
@@ -150,7 +182,7 @@ const plans: TableConfig = {
     },
     {
       key: 'title',
-      label: (v) => ({ seminar: 'Семинарын нэр', fellowship: 'Сэдэв' })[cat(v)] ?? 'Нэр',
+      label: (v) => ({ seminar: 'Семинарын нэр', fellowship: 'Сэдэв', school: 'Анги' })[cat(v)] ?? 'Нэр',
       type: 'text',
       required: true,
     },
@@ -159,7 +191,7 @@ const plans: TableConfig = {
     { key: 'time', label: 'Цаг', type: 'text', placeholder: '10:00–17:00' },
     {
       key: 'speaker',
-      label: (v) => ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч' })[cat(v)] ?? 'Хариуцагч',
+      label: (v) => ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч', word: 'Номлогч', school: 'Багш' })[cat(v)] ?? 'Хариуцагч',
       type: 'text',
     },
     { key: 'location', label: 'Байршил', type: 'tags' },
@@ -198,6 +230,7 @@ const nationalSeminars: TableConfig = {
 export const ADMIN_TABLES: TableConfig[] = [
   churchInfo,
   announcements,
+  banners,
   verses,
   plans,
   nationalSeminars,
@@ -217,7 +250,15 @@ export interface AdminGroup {
 
 /** Five top-level tabs; related tables become sub-tabs. */
 export const ADMIN_GROUPS: AdminGroup[] = [
-  { id: 'news', label: 'Зар', icon: Megaphone, sections: [{ id: 'announcements', label: 'Зар', table: announcements }] },
+  {
+    id: 'news',
+    label: 'Зар',
+    icon: Megaphone,
+    sections: [
+      { id: 'announcements', label: 'Зар', table: announcements },
+      { id: 'banners', label: 'Баннер', table: banners },
+    ],
+  },
   { id: 'verse', label: 'Эшлэл', icon: BookMarked, sections: [{ id: 'verses', label: 'Эшлэл', table: verses }] },
   {
     id: 'plan',

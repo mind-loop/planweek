@@ -499,6 +499,9 @@ function CrudPanel({ config }: { config: TableConfig }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!editing) return;
+    // Image pickers aren't native inputs, so the browser can't enforce `required` on them.
+    const missingImage = config.fields.find((f) => f.type === 'image' && f.required && !values[f.key]);
+    if (missingImage) return toast(`${typeof missingImage.label === 'string' ? missingImage.label : 'Зураг'} оруулна уу`, 'error');
     setBusy(true);
     const payload = toPayload(config.fields, values);
     const { error } =

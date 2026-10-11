@@ -7,7 +7,7 @@ import type { Announcement } from '../types/database';
 import type { TabId } from '../components/BottomNav';
 import { HomeBanner } from './home/HomeBanner';
 import { VerseSection } from './home/VerseSection';
-import { FellowshipSection } from './home/FellowshipSection';
+import { WeekProgramSection } from './home/WeekProgramSection';
 import { ServiceSection } from './home/ServiceSection';
 import { CleaningSection } from './home/CleaningSection';
 import { AnnouncementSheet, NoticesSection } from './home/Notices';
@@ -29,9 +29,9 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   if (!result) return null;
   const { churchInfo, announcements, verses } = result.data;
 
-  // «Онцлох» and «Семинар» announcements go to the banner; the rest to Зарлал.
-  const featured = announcements.filter((a) => a.tag === 'featured' || a.tag === 'seminar');
-  const notices = announcements.filter((a) => a.tag !== 'featured' && a.tag !== 'seminar');
+  // Banner shows only banner images; every announcement lives in Зарлал (Онцлох, Семинар first).
+  const rank = (a: Announcement) => (a.tag === 'featured' ? 0 : a.tag === 'seminar' ? 1 : 2);
+  const notices = [...announcements].sort((a, b) => rank(a) - rank(b));
   const today = todayISO();
 
   return (
@@ -45,11 +45,11 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
 
       <InstallBanner />
 
-      <HomeBanner featured={featured} onOpenAnnouncement={setOpenItem} />
+      <HomeBanner />
 
       <VerseSection verses={verses} />
 
-      <FellowshipSection onNavigate={onNavigate} />
+      <WeekProgramSection onNavigate={onNavigate} />
 
       <ServiceSection />
 

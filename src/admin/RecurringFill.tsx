@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, LoaderCircle, Repeat } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
-import { WEEKLY_FELLOWSHIPS, sameEvent } from '../lib/recurring';
+import { WEEKLY_PROGRAM, sameEvent } from '../lib/recurring';
 import { cn, parseISODate, toISODate, todayISO, WEEKDAYS_MN } from '../lib/utils';
 import { Sheet } from '../components/ui';
 
@@ -24,7 +24,7 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(todayISO().slice(0, 7));
-  const [picked, setPicked] = useState<Set<number>>(() => new Set(WEEKLY_FELLOWSHIPS.map((_, i) => i)));
+  const [picked, setPicked] = useState<Set<number>>(() => new Set(WEEKLY_PROGRAM.map((_, i) => i)));
   const [busy, setBusy] = useState(false);
 
   const toggle = (i: number) =>
@@ -49,9 +49,9 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
     }
 
     const rows = days.flatMap((date) =>
-      WEEKLY_FELLOWSHIPS.filter((t, i) => picked.has(i) && parseISODate(date).getDay() === t.weekday)
+      WEEKLY_PROGRAM.filter((t, i) => picked.has(i) && parseISODate(date).getDay() === t.weekday)
         .filter((t) => !(existing ?? []).some((e) => e.event_date === date && sameEvent(e.title, t.title)))
-        .map((t) => ({ event_date: date, title: t.title, time: t.time, location: t.location, category: 'fellowship' })),
+        .map((t) => ({ event_date: date, title: t.title, time: t.time, location: t.location, category: t.category })),
     );
 
     if (rows.length === 0) {
@@ -62,7 +62,7 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
     const { error } = await supabase!.from('monthly_plans').insert(rows);
     setBusy(false);
     if (error) return toast(error.message, 'error');
-    toast(`${rows.length} нөхөрлөл нэмэгдлээ — удирдагчийг нь засаарай`);
+    toast(`${rows.length} хөтөлбөр нэмэгдлээ — хариуцагчийг нь засаарай`);
     setOpen(false);
     onDone();
   };
@@ -74,13 +74,13 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
         onClick={() => setOpen(true)}
         className="flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 font-semibold text-slate-700 ring-1 ring-slate-200 active:scale-[0.98]"
       >
-        <Repeat className="size-5" /> Тогтмол нөхөрлөл
+        <Repeat className="size-5" /> Тогтмол хөтөлбөр
       </button>
 
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Тогтмол нөхөрлөл нэмэх"
+        title="Тогтмол хөтөлбөр нэмэх"
         footer={
           <button
             type="button"
@@ -93,7 +93,7 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
         }
       >
         <p className="text-[15px] text-slate-500">
-          Сонгосон сарын бүх долоо хоногт доорх нөхөрлөлүүд автоматаар нэмэгдэнэ. Аль хэдийн орсон өдрийнхийг алгасна.
+          Сонгосон сарын бүх долоо хоногт доорх хөтөлбөр (анги, үг, нөхөрлөл) автоматаар нэмэгдэнэ. Аль хэдийн орсон өдрийнхийг алгасна.
         </p>
         <label htmlFor="rf-month" className="mb-1.5 mt-4 block text-[15px] font-semibold text-slate-700">
           Сар
@@ -101,7 +101,7 @@ export function RecurringFillButton({ onDone }: { onDone: () => void }) {
         <input id="rf-month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className={inputClass} />
 
         <ul className="mt-4 space-y-2">
-          {WEEKLY_FELLOWSHIPS.map((t, i) => {
+          {WEEKLY_PROGRAM.map((t, i) => {
             const on = picked.has(i);
             return (
               <li key={t.title}>

@@ -4,9 +4,10 @@ import { useBulletin } from '../../context/DataContext';
 import { useDistrict } from '../../context/DistrictContext';
 import { DUTY_META, DUTY_ORDER, dutyWeeks, seminarDays } from '../../lib/duty';
 import { addDays, cn, dotDate, shortDate, todayISO } from '../../lib/utils';
-import { SectionTitle, Sheet } from '../../components/ui';
+import { SectionTitle, Segmented, Sheet } from '../../components/ui';
 import { SundayDutyView } from '../SundayDuties';
 import { SeminarDuties } from '../SeminarDuties';
+import { SeminarSchedule } from '../SeminarSchedule';
 
 /** Үйлчлэл — this week's Sunday duties at a glance, plus the seminar roster when it's near. */
 export function ServiceSection() {
@@ -14,6 +15,7 @@ export function ServiceSection() {
   const { isMine } = useDistrict();
   const [weekOpen, setWeekOpen] = useState(false);
   const [seminarOpen, setSeminarOpen] = useState(false);
+  const [seminarView, setSeminarView] = useState<'duties' | 'all'>('duties');
   if (!result) return null;
 
   const duties = result.data.duties;
@@ -102,8 +104,17 @@ export function ServiceSection() {
       <Sheet open={weekOpen} onClose={() => setWeekOpen(false)} title="Үйлчлэлийн хуваарь">
         <SundayDutyView />
       </Sheet>
-      <Sheet open={seminarOpen} onClose={() => setSeminarOpen(false)} title="Семинарын үйлчлэл">
-        <SeminarDuties />
+      <Sheet open={seminarOpen} onClose={() => setSeminarOpen(false)} title="Библийн семинар">
+        <Segmented
+          label="Семинар"
+          value={seminarView}
+          onChange={setSeminarView}
+          options={[
+            { id: 'duties', label: 'Манай үйлчлэл' },
+            { id: 'all', label: 'Бүх чуулган' },
+          ]}
+        />
+        {seminarView === 'duties' ? <SeminarDuties /> : <SeminarSchedule />}
       </Sheet>
     </section>
   );

@@ -1,5 +1,4 @@
-import { BookMarked, Copy, Share2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { BookMarked } from 'lucide-react';
 import { cn, shortDate, todayISO } from '../../lib/utils';
 import type { MemoryVerse } from '../../types/database';
 import { SectionTitle } from '../../components/ui';
@@ -13,100 +12,60 @@ function pickWeeks(verses: MemoryVerse[]): { prev?: MemoryVerse; current?: Memor
   return { prev: sorted[i - 1], current: sorted[i], next: sorted[i + 1] };
 }
 
-async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // Older iOS / non-secure contexts
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand('copy');
-    ta.remove();
-    return ok;
-  }
+/** Week label as a badge so it stands apart from the verse text. */
+function WeekBadge({ label, date, tone }: { label: string; date: string; tone: 'past' | 'current' | 'next' }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold',
+        tone === 'current' && 'bg-cyan-700 text-white',
+        tone === 'next' && 'bg-emerald-100 text-emerald-800',
+        tone === 'past' && 'bg-slate-100 text-slate-600',
+      )}
+    >
+      {label}
+      <span className={cn('font-semibold', tone === 'current' ? 'text-cyan-100' : 'opacity-70')}>· {shortDate(date)}</span>
+    </span>
+  );
 }
 
-/** Цээжлэх эшлэл: last / this / next week, all visible — this week highlighted. */
+/** Цээжлэх эшлэл: last / this / next week in one card — this week highlighted. */
 export function VerseSection({ verses }: { verses: MemoryVerse[] }) {
-  const toast = useToast();
   const { prev, current, next } = pickWeeks(verses);
   if (!current) return null;
-
-  const fullText = `"${current.text}" — ${current.reference}`;
-
-  const onCopy = async () => {
-    const ok = await copyText(fullText);
-    toast(ok ? 'Эшлэл хуулагдлаа' : 'Хуулж чадсангүй', ok ? 'success' : 'error');
-  };
-
-  const onShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: current.reference, text: fullText });
-      } catch {
-        /* user cancelled */
-      }
-    } else {
-      await onCopy();
-    }
-  };
 
   return (
     <section className="space-y-3">
       <SectionTitle icon={<BookMarked className="size-5" />} title="Цээжлэх эшлэл" />
 
-      {/* One card: last week (small) → this week (highlighted) → next week (small) */}
       <div className="overflow-hidden rounded-3xl bg-white shadow-soft">
-        {prev && <SideVerse label="Өнгөрсөн долоо хоногийн эшлэл" verse={prev} />}
+        {prev && <SideVerse label="Өнгөрсөн долоо хоног" verse={prev} tone="past" />}
 
-        <div className="relative overflow-hidden bg-cyan-50 p-6 text-cyan-950">
+        <div className="relative overflow-hidden bg-cyan-50 p-6">
           <span className="pointer-events-none absolute -right-1 -top-7 select-none font-serif text-[150px] leading-none text-cyan-200/70" aria-hidden>
             “
           </span>
-          <p className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-700">
-            <span className="size-1.5 rounded-full bg-cyan-600" />
-            Энэ долоо хоногийн эшлэл · {shortDate(current.week_start)}
-          </p>
+          <div className="relative">
+            <WeekBadge label="Энэ долоо хоног" date={current.week_start} tone="current" />
+          </div>
           <blockquote className="relative mt-3 font-serif text-[21px] leading-relaxed text-slate-900">{current.text}</blockquote>
           <p className="mt-3 text-base font-bold text-cyan-800">— {current.reference}</p>
-          <div className="mt-5 flex gap-2">
-            <button
-              type="button"
-              onClick={onCopy}
-              className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-cyan-700 font-semibold text-white transition active:scale-[0.97]"
-            >
-              <Copy className="size-5" /> Хуулах
-            </button>
-            <button
-              type="button"
-              onClick={onShare}
-              aria-label="Хуваалцах"
-              className="grid min-h-12 w-14 place-items-center rounded-2xl bg-white text-cyan-800 shadow-soft transition active:scale-95"
-            >
-              <Share2 className="size-5" />
-            </button>
-          </div>
         </div>
 
-        {next && <SideVerse label="Ирэх долоо хоногийн эшлэл" verse={next} upcoming />}
+        {next && <SideVerse label="Ирэх долоо хоног" verse={next} tone="next" />}
       </div>
     </section>
   );
 }
 
-function SideVerse({ label, verse, upcoming = false }: { label: string; verse: MemoryVerse; upcoming?: boolean }) {
+function SideVerse({ label, verse, tone }: { label: string; verse: MemoryVerse; tone: 'past' | 'next' }) {
   return (
-    <div className={cn('px-5 py-4', !upcoming && 'opacity-75')}>
-      <p className={cn('text-xs font-bold uppercase tracking-wider', upcoming ? 'text-emerald-700' : 'text-slate-400')}>
-        {label} · {shortDate(verse.week_start)}
-      </p>
-      <p className="mt-2 font-serif text-[17px] leading-relaxed text-slate-800">{verse.text}</p>
-      <p className="mt-1.5 text-[15px] font-bold text-slate-600">— {verse.reference}</p>
+    <div className="px-5 py-4">
+      <WeekBadge label={label} date={verse.week_start} tone={tone} />
+      <div className={cn(tone === 'past' && 'opacity-75')}>
+        <p className="mt-2.5 font-serif text-[17px] leading-relaxed text-slate-800">{verse.text}</p>
+        <p className="mt-1.5 text-[15px] font-bold text-slate-600">— {verse.reference}</p>
+      </div>
     </div>
   );
 }

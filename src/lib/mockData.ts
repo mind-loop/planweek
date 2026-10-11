@@ -117,5 +117,6 @@ export function buildMockData(): BulletinData {
     seminarDuties: [],
     planFiles: [],
     cleaning: [],
+    banners: [],
   };
 }

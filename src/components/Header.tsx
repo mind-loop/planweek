@@ -38,7 +38,7 @@ export function Header() {
     <header className="pt-safe sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-2.5">
         <button type="button" onClick={onLogoTap} aria-label="Чуулганы лого" className="shrink-0 active:scale-95">
-          <img src="/logo.png" alt="" className="size-9 object-contain" draggable={false} />
+          <img src="/icon-192.png" alt="" className="size-9 rounded-xl object-cover" draggable={false} />
         </button>
 
         <div className="min-w-0 flex-1">

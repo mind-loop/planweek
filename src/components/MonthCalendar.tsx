@@ -5,6 +5,8 @@ import type { MonthlyPlan, PlanCategory } from '../types/database';
 export const CATEGORY_COLORS: Record<PlanCategory, { chip: string; dot: string; label: string }> = {
   seminar: { chip: 'bg-indigo-100 text-indigo-800', dot: 'bg-indigo-500', label: 'Семинар' },
   fellowship: { chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500', label: 'Нөхөрлөл' },
+  word: { chip: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500', label: 'Үг' },
+  school: { chip: 'bg-sky-100 text-sky-800', dot: 'bg-sky-500', label: 'Чуулганы сургууль' },
   service: { chip: 'bg-amber-100 text-amber-900', dot: 'bg-amber-500', label: 'Үйлчлэл' },
 };
 const NO_CATEGORY = { chip: 'bg-slate-100 text-slate-700', dot: 'bg-slate-400', label: 'Бусад' };
@@ -53,7 +55,8 @@ function weekBars(plans: MonthlyPlan[], week: string[]): Bar[] {
       ends: p.end_date! <= last,
       lane: 0,
     }))
-    .sort((a, b) => a.from - b.from || b.to - b.from - (a.to - a.from));
+    // Earlier-starting events first, so a bar continuing from last week keeps its lane.
+    .sort((a, b) => a.from - b.from || a.plan.event_date.localeCompare(b.plan.event_date) || b.to - b.from - (a.to - a.from));
   const laneEnds: number[] = [];
   for (const b of bars) {
     let lane = laneEnds.findIndex((end) => end < b.from);

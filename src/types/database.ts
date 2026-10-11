@@ -41,7 +41,7 @@ export interface MemoryVerse {
   created_at?: string;
 }
 
-export type PlanCategory = 'seminar' | 'fellowship' | 'service';
+export type PlanCategory = 'seminar' | 'fellowship' | 'service' | 'school' | 'word';
 
 export interface MonthlyPlan {
   id: string;
@@ -52,7 +52,7 @@ export interface MonthlyPlan {
   speaker: string | null;
   location: string | null;
   notes: string | null;
-  /** Семинар / Нөхөрлөл / Үйлчлэл */
+  /** Семинар / Нөхөрлөл / Үйлчлэл / Чуулганы сургууль / Үг */
   category: PlanCategory | null;
   /** Семинар: last day (multi-day events). */
   end_date: string | null;
@@ -113,6 +113,7 @@ export interface Tables {
   service_duties: ServiceDuty;
   plan_files: PlanFile;
   cleaning_schedules: CleaningSchedule;
+  banners: Banner;
   national_seminars: NationalSeminar;
   seminar_daily_duties: SeminarDailyDuty;
 }
@@ -127,6 +128,7 @@ export interface BulletinData {
   duties: ServiceDuty[];
   planFiles: PlanFile[];
   cleaning: CleaningSchedule[];
+  banners: Banner[];
   seminars: NationalSeminar[];
   seminarDuties: SeminarDailyDuty[];
 }
@@ -155,6 +157,19 @@ export interface CleaningSchedule {
   /** Cleaning steps (the same guide is kept on every row). */
   tasks: string[];
   notes: string | null;
+  sort_order: number;
+  created_at?: string;
+}
+
+/** Home-page banner slide (image), managed separately from announcements. */
+export interface Banner {
+  id: string;
+  image_url: string;
+  title: string | null;
+  link_url: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
   sort_order: number;
   created_at?: string;
 }

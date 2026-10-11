@@ -58,7 +58,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
   const sample: BulletinData =
     !isSupabaseConfigured || import.meta.env.DEV
       ? mock
-      : { ...mock, announcements: [], verses: [], plans: [], duties: [], seminars: [], seminarDuties: [], planFiles: [], cleaning: [] };
+      : { ...mock, announcements: [], verses: [], plans: [], duties: [], seminars: [], seminarDuties: [], planFiles: [], cleaning: [], banners: [] };
   const errors: string[] = [];
   const db = supabase;
   const today = todayISO();
@@ -71,6 +71,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     [duties, dutySrc],
     [planFiles, planFileSrc],
     [cleaning, cleaningSrc],
+    [banners, bannerSrc],
     [seminars, seminarSrc],
     [seminarDuties, seminarDutySrc],
   ] = await Promise.all([
@@ -102,6 +103,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     ),
     withFallback('plan_files', db && db.from('plan_files').select('*').order('month', { ascending: false }).order('created_at', { ascending: false }).limit(24), sample.planFiles, errors),
     withFallback('cleaning_schedules', db && db.from('cleaning_schedules').select('*').order('sort_order'), sample.cleaning, errors),
+    withFallback('banners', db && db.from('banners').select('*').eq('is_active', true).order('sort_order').order('created_at', { ascending: false }), sample.banners, errors),
     withFallback(
       'national_seminars',
       db && db.from('national_seminars').select('*').gte('end_date', addDays(today, -30)).order('start_date').order('sort_order'),
@@ -125,6 +127,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       duties,
       planFiles,
       cleaning: cleaning.map((c) => ({ ...c, tasks: c.tasks ?? [] })),
+      banners,
       seminars,
       seminarDuties,
     },
@@ -136,6 +139,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       duties: dutySrc,
       planFiles: planFileSrc,
       cleaning: cleaningSrc,
+      banners: bannerSrc,
       seminars: seminarSrc,
       seminarDuties: seminarDutySrc,
     },
