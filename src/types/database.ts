@@ -95,6 +95,31 @@ export interface CleaningSchedule {
   created_at?: string;
 }
 
+/** Nationwide Bible seminar: which churches attend in which date range. */
+export interface NationalSeminar {
+  id: string;
+  start_date: string;
+  end_date: string;
+  /** Comma-separated church/region names, e.g. "Баянхонгор, Булган, Увс" */
+  churches: string;
+  notes: string | null;
+  sort_order: number;
+  created_at?: string;
+}
+
+export type SeminarDutyType = 'welcome' | 'tea' | 'childcare' | 'cleaning';
+
+/** One duty on one seminar day, e.g. 10/13 · Угталт · "31, 32". */
+export interface SeminarDailyDuty {
+  id: string;
+  day_date: string;
+  duty_type: SeminarDutyType;
+  /** District numbers ("31, 32") or team names ("Хайр баг"). */
+  assignees: string;
+  notes: string | null;
+  created_at?: string;
+}
+
 /** Map of table name → row type; drives the generic fetch and admin CRUD helpers. */
 export interface Tables {
   church_info: ChurchInfo;
@@ -104,6 +129,8 @@ export interface Tables {
   service_duties: ServiceDuty;
   fellowship_schedules: FellowshipSchedule;
   cleaning_schedules: CleaningSchedule;
+  national_seminars: NationalSeminar;
+  seminar_daily_duties: SeminarDailyDuty;
 }
 
 export type TableName = keyof Tables;
@@ -116,4 +143,6 @@ export interface BulletinData {
   duties: ServiceDuty[];
   fellowship: FellowshipSchedule[];
   cleaning: CleaningSchedule[];
+  seminars: NationalSeminar[];
+  seminarDuties: SeminarDailyDuty[];
 }

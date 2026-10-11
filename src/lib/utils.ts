@@ -84,3 +84,24 @@ export function sortDistricts(a: string, b: string): number {
   if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
   return a.localeCompare(b, 'mn');
 }
+
+export const WEEKDAYS_SHORT_MN = ['Ня', 'Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя'];
+
+/** "Мя" */
+export function weekdayShort(iso: string): string {
+  return WEEKDAYS_SHORT_MN[parseISODate(iso).getDay()];
+}
+
+/** "10.13" — the format used on printed seminar schedules. */
+export function dotDate(iso: string): string {
+  const d = parseISODate(iso);
+  return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Comma-separated list → trimmed items. */
+export function splitList(value: string | null | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}

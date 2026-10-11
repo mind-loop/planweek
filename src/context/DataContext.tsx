@@ -34,6 +34,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const set = new Set<string>();
     result?.data.duties.forEach((d) => parseDistricts(d.district).forEach((x) => set.add(x)));
     result?.data.cleaning.forEach((c) => parseDistricts(c.district).forEach((x) => set.add(x)));
+    // Seminar assignees mix districts ("31, 32") with team names ("Хайр баг"); keep numbers only.
+    result?.data.seminarDuties.forEach((s) =>
+      parseDistricts(s.assignees).forEach((x) => /^\d+$/.test(x) && set.add(x)),
+    );
     return {
       result,
       loading,

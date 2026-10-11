@@ -3,11 +3,12 @@ import { Handshake, MapPin, Users } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useDistrict } from '../context/DistrictContext';
 import { DUTY_META, DUTY_ORDER, dutyWeeks } from '../lib/duty';
-import { cn, districtLabel, shortDate } from '../lib/utils';
+import { addDays, cn, districtLabel, shortDate, todayISO } from '../lib/utils';
 import type { DutyType, ServiceDuty } from '../types/database';
 import { Card, MineBadge, SectionTitle } from '../components/ui';
+import { SeminarDuties } from './SeminarDuties';
 
-export function DutyPage() {
+function SundayDutyView() {
   const { result } = useBulletin();
   const [weekIdx, setWeekIdx] = useState<0 | 1>(0);
   const duties = result?.data.duties ?? [];
@@ -17,7 +18,6 @@ export function DutyPage() {
 
   return (
     <div>
-      <SectionTitle icon={<Handshake className="size-5" />} title="Үйлчлэлийн хуваарь" />
 
       {/* Segmented week toggle with sliding indicator */}
       <div role="tablist" aria-label="Долоо хоног" className="relative mb-4 grid grid-cols-2 rounded-2xl bg-slate-200/70 p-1">
@@ -102,6 +102,53 @@ function DutyCard({ type, rows, delay }: { type: DutyType; rows: ServiceDuty[]; 
           </ul>
         )}
       </Card>
+    </div>
+  );
+}
+
+type DutyView = 'sunday' | 'seminar';
+
+export function DutyPage() {
+  const { result } = useBulletin();
+  const seminarRows = result?.data.seminarDuties ?? [];
+  const today = todayISO();
+  // Open on the seminar roster when a seminar day falls within the next week.
+  const seminarSoon = seminarRows.some((r) => r.day_date >= today && r.day_date <= addDays(today, 7));
+  const [view, setView] = useState<DutyView>(seminarSoon ? 'seminar' : 'sunday');
+  const showSeminar = view === 'seminar' && seminarRows.length > 0;
+
+  return (
+    <div>
+      <SectionTitle icon={<Handshake className="size-5" />} title="Үйлчлэлийн хуваарь" />
+
+      {seminarRows.length > 0 && (
+        <div role="tablist" aria-label="Хуваарийн төрөл" className="mb-4 flex gap-2">
+          {(
+            [
+              ['sunday', 'Ням гараг'],
+              ['seminar', 'Семинар · 5 өдөр'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => setView(id)}
+              className={cn(
+                'min-h-11 rounded-full px-4 text-[15px] font-semibold transition active:scale-95',
+                view === id ? 'bg-slate-900 text-white shadow-sm' : 'bg-white text-slate-700 ring-1 ring-slate-200',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div key={view} className="animate-fade-up">
+        {showSeminar ? <SeminarDuties /> : <SundayDutyView />}
+      </div>
     </div>
   );
 }

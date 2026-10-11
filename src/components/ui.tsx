@@ -222,3 +222,50 @@ export function InfoLine({ icon, children }: { icon: ReactNode; children: ReactN
     </div>
   );
 }
+
+/* ------------------------------------------------------------- Segmented */
+
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: { id: T; label: string; sub?: string }[];
+  value: T;
+  onChange: (id: T) => void;
+  label: string;
+}) {
+  const idx = Math.max(0, options.findIndex((o) => o.id === value));
+  const n = options.length;
+  return (
+    <div
+      role="tablist"
+      aria-label={label}
+      className="relative mb-4 grid rounded-2xl bg-slate-200/70 p-1"
+      style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
+    >
+      <span
+        aria-hidden
+        className="absolute inset-y-1 left-1 rounded-xl bg-white shadow-sm transition-transform duration-300 ease-out"
+        style={{ width: `calc((100% - 8px) / ${n})`, transform: `translateX(${idx * 100}%)` }}
+      />
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="tab"
+          aria-selected={o.id === value}
+          onClick={() => onChange(o.id)}
+          className={cn(
+            'relative z-10 flex min-h-12 flex-col items-center justify-center rounded-xl px-1 transition-colors',
+            o.id === value ? 'text-cyan-800' : 'text-slate-600',
+          )}
+        >
+          <span className="text-[15px] font-bold leading-tight">{o.label}</span>
+          {o.sub && <span className="text-xs font-medium">{o.sub}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}

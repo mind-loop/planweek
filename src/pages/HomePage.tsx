@@ -15,7 +15,7 @@ import { useBulletin } from '../context/DataContext';
 import { InstallBanner } from '../components/InstallApp';
 import { useDistrict } from '../context/DistrictContext';
 import { useToast } from '../context/ToastContext';
-import { DUTY_META, dutyWeeks } from '../lib/duty';
+import { DUTY_META, SEMINAR_DUTY_META, dutyWeeks } from '../lib/duty';
 import { cn, longDate, shortDate, todayISO, weekdayMn } from '../lib/utils';
 import type { Announcement, MemoryVerse } from '../types/database';
 import type { TabId } from '../components/BottomNav';
@@ -98,7 +98,18 @@ function MyDutiesCard({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
         sub: `${c.tasks.length} ажил`,
         tab: 'cleaning' as TabId,
       }));
-    return [...duties, ...cleaning];
+    const today = todayISO();
+    const seminar = result.data.seminarDuties
+      .filter((s) => s.day_date >= today && isMine(s.assignees))
+      .map((s) => ({
+        key: s.id,
+        icon: SEMINAR_DUTY_META[s.duty_type].icon,
+        tint: SEMINAR_DUTY_META[s.duty_type].tint,
+        title: `Семинар: ${SEMINAR_DUTY_META[s.duty_type].label}`,
+        sub: `${weekdayMn(s.day_date)} · ${shortDate(s.day_date)}`,
+        tab: 'duty' as TabId,
+      }));
+    return [...seminar, ...duties, ...cleaning];
   }, [result, district, isMine]);
 
   if (!district) {

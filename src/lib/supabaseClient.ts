@@ -71,6 +71,8 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     [duties, dutySrc],
     [fellowship, fellowSrc],
     [cleaning, cleanSrc],
+    [seminars, seminarSrc],
+    [seminarDuties, seminarDutySrc],
   ] = await Promise.all([
     withFallback<ChurchInfo>('church_info', db && db.from('church_info').select('*').order('id').limit(1), [mock.churchInfo], errors),
     withFallback(
@@ -100,6 +102,18 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     ),
     withFallback('fellowship_schedules', db && db.from('fellowship_schedules').select('*').order('sort_order'), sample.fellowship, errors),
     withFallback('cleaning_schedules', db && db.from('cleaning_schedules').select('*').order('sort_order'), sample.cleaning, errors),
+    withFallback(
+      'national_seminars',
+      db && db.from('national_seminars').select('*').gte('end_date', addDays(today, -30)).order('start_date').order('sort_order'),
+      sample.seminars,
+      errors,
+    ),
+    withFallback(
+      'seminar_daily_duties',
+      db && db.from('seminar_daily_duties').select('*').gte('day_date', addDays(today, -14)).order('day_date'),
+      sample.seminarDuties,
+      errors,
+    ),
   ]);
 
   return {
@@ -111,6 +125,8 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       duties,
       fellowship,
       cleaning: cleaning.map((c) => ({ ...c, tasks: c.tasks ?? [] })),
+      seminars,
+      seminarDuties,
     },
     sources: {
       churchInfo: infoSrc,
@@ -120,6 +136,8 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       duties: dutySrc,
       fellowship: fellowSrc,
       cleaning: cleanSrc,
+      seminars: seminarSrc,
+      seminarDuties: seminarDutySrc,
     },
     errors,
   };

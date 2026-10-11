@@ -1,5 +1,5 @@
-import { Baby, BookOpen, CookingPot, DoorOpen, type LucideIcon } from 'lucide-react';
-import type { DutyType, ServiceDuty } from '../types/database';
+import { Baby, BookOpen, Coffee, CookingPot, DoorOpen, SprayCan, type LucideIcon } from 'lucide-react';
+import type { DutyType, SeminarDailyDuty, SeminarDutyType, ServiceDuty } from '../types/database';
 import { addDays, todayISO, upcomingSunday } from './utils';
 
 export const DUTY_ORDER: DutyType[] = ['kitchen', 'childcare', 'welcome', 'scripture'];
@@ -22,4 +22,18 @@ export function dutyWeeks(duties: ServiceDuty[]): [string, string] {
   const current = idx >= 0 ? weeks[idx] : (weeks.at(-1) ?? upcomingSunday());
   const next = idx >= 0 && weeks[idx + 1] ? weeks[idx + 1] : addDays(current, 7);
   return [current, next];
+}
+
+export const SEMINAR_DUTY_ORDER: SeminarDutyType[] = ['welcome', 'tea', 'childcare', 'cleaning'];
+
+export const SEMINAR_DUTY_META: Record<SeminarDutyType, { label: string; icon: LucideIcon; tint: string }> = {
+  welcome: { label: 'Угталт', icon: DoorOpen, tint: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
+  tea: { label: 'Хөнгөн цай', icon: Coffee, tint: 'bg-orange-50 text-orange-700 ring-orange-100' },
+  childcare: { label: 'Хүүхэд харах', icon: Baby, tint: 'bg-pink-50 text-pink-700 ring-pink-100' },
+  cleaning: { label: 'Цэвэрлэгээ', icon: SprayCan, tint: 'bg-sky-50 text-sky-700 ring-sky-100' },
+};
+
+/** Distinct seminar days, ascending. */
+export function seminarDays(rows: SeminarDailyDuty[]): string[] {
+  return [...new Set(rows.map((r) => r.day_date))].sort();
 }

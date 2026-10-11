@@ -1,7 +1,7 @@
-import { BookMarked, CalendarDays, Church, Handshake, Megaphone, SprayCan, Users, type LucideIcon } from 'lucide-react';
+import { BookMarked, CalendarCheck, CalendarDays, Church, GraduationCap, Handshake, Megaphone, SprayCan, Users, type LucideIcon } from 'lucide-react';
 import type { TableName } from '../types/database';
-import { DUTY_META, DUTY_ORDER } from '../lib/duty';
-import { shortDate, upcomingSunday } from '../lib/utils';
+import { DUTY_META, DUTY_ORDER, SEMINAR_DUTY_META, SEMINAR_DUTY_ORDER } from '../lib/duty';
+import { dotDate, shortDate, upcomingSunday, weekdayShort } from '../lib/utils';
 
 export type FieldType = 'text' | 'textarea' | 'date' | 'number' | 'checkbox' | 'select' | 'lines' | 'tags';
 
@@ -166,6 +166,42 @@ export const ADMIN_TABLES: TableConfig[] = [
       { key: 'tasks', label: 'Хийх ажлууд', type: 'lines', hint: 'Мөр бүрт нэг ажил' },
       { key: 'notes', label: 'Тэмдэглэл', type: 'textarea' },
       { key: 'sort_order', label: 'Дараалал', type: 'number', default: () => 10 },
+    ],
+  },
+  {
+    table: 'national_seminars',
+    label: 'Семинар',
+    icon: GraduationCap,
+    orderBy: { column: 'start_date', ascending: false },
+    title: (r) => s(r.churches),
+    subtitle: (r) => `${dotDate(s(r.start_date))} – ${dotDate(s(r.end_date))}`,
+    fields: [
+      { key: 'start_date', label: 'Эхлэх огноо', type: 'date', required: true },
+      { key: 'end_date', label: 'Дуусах огноо', type: 'date', required: true },
+      { key: 'churches', label: 'Чуулганууд', type: 'textarea', required: true, placeholder: 'Баянхонгор, Булган, Увс', hint: 'Таслалаар тусгаарлана' },
+      { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
+      { key: 'sort_order', label: 'Дараалал', type: 'number', default: () => 10 },
+    ],
+  },
+  {
+    table: 'seminar_daily_duties',
+    label: 'Семинар үйлчлэл',
+    icon: CalendarCheck,
+    orderBy: { column: 'day_date', ascending: true },
+    title: (r) => SEMINAR_DUTY_META[r.duty_type as keyof typeof SEMINAR_DUTY_META]?.label ?? s(r.duty_type),
+    subtitle: (r) => `${weekdayShort(s(r.day_date))} ${dotDate(s(r.day_date))} · ${s(r.assignees)}`,
+    fields: [
+      { key: 'day_date', label: 'Өдөр', type: 'date', required: true },
+      {
+        key: 'duty_type',
+        label: 'Үйлчлэл',
+        type: 'select',
+        required: true,
+        default: () => 'welcome',
+        options: SEMINAR_DUTY_ORDER.map((t) => ({ value: t, label: SEMINAR_DUTY_META[t].label })),
+      },
+      { key: 'assignees', label: 'Хариуцагч', type: 'text', required: true, placeholder: '31, 32  эсвэл  Хайр баг', hint: 'Дүүргийн дугаар эсвэл багийн нэр' },
+      { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
     ],
   },
 ];

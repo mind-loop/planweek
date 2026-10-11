@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from './lib/supabaseClient';
 import { Header } from './components/Header';
 import { BottomNav, TABS, type TabId } from './components/BottomNav';
 import { PageSkeleton } from './components/ui';
+import { DistrictWelcome } from './components/DistrictWelcome';
 import { HomePage } from './pages/HomePage';
 import { PlanPage } from './pages/PlanPage';
 import { DutyPage } from './pages/DutyPage';
@@ -101,6 +102,7 @@ export default function App() {
       </main>
 
       <BottomNav active={tab} onChange={navigate} />
+      <DistrictWelcome />
     </div>
   );
 }

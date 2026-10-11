@@ -3,9 +3,40 @@ import { CalendarDays, Clock, MapPin, Mic } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { cn, monthLabel, parseISODate, todayISO, weekdayMn } from '../lib/utils';
 import type { MonthlyPlan } from '../types/database';
-import { EmptyState, InfoLine, SectionTitle } from '../components/ui';
+import { EmptyState, InfoLine, SectionTitle, Segmented } from '../components/ui';
+import { SeminarSchedule } from './SeminarSchedule';
+
+type PlanView = 'plan' | 'seminar';
 
 export function PlanPage() {
+  const { result } = useBulletin();
+  const seminars = result?.data.seminars ?? [];
+  const today = todayISO();
+  // Open on the seminar list while one is running.
+  const live = seminars.some((s) => s.start_date <= today && today <= s.end_date);
+  const [view, setView] = useState<PlanView>(live ? 'seminar' : 'plan');
+
+  if (seminars.length === 0) return <MonthlyPlanView />;
+
+  return (
+    <div>
+      <Segmented
+        label="Төлөвлөгөө"
+        value={view}
+        onChange={setView}
+        options={[
+          { id: 'plan', label: 'Сарын төлөвлөгөө' },
+          { id: 'seminar', label: 'Библийн семинар' },
+        ]}
+      />
+      <div key={view} className="animate-fade-up">
+        {view === 'plan' ? <MonthlyPlanView /> : <SeminarSchedule />}
+      </div>
+    </div>
+  );
+}
+
+function MonthlyPlanView() {
   const { result } = useBulletin();
   const [showPast, setShowPast] = useState(false);
   const today = todayISO();

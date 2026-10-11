@@ -120,6 +120,9 @@ export function buildMockData(): BulletinData {
       { id: 'f5', group_name: 'Ээжүүдийн нөхөрлөл', day_of_week: 'Мягмар', time: '14:00', location: 'Бага танхим', leader: 'Д.Оюунаа', notes: null, sort_order: 5 },
     ],
 
+    seminars: [],
+    seminarDuties: [],
+
     cleaning: [
       {
         id: 'c1',
