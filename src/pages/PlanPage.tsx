@@ -115,8 +115,8 @@ function TimelineItem({ plan, isNext, past, delay }: { plan: MonthlyPlan; isNext
 
       <div
         className={cn(
-          'min-w-0 flex-1 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.05)] ring-1 transition',
-          isNext ? 'ring-2 ring-cyan-600' : 'ring-slate-200/70',
+          'min-w-0 flex-1 rounded-2xl bg-white p-4 shadow-soft ring-1 transition',
+          isNext ? 'ring-2 ring-cyan-600' : 'ring-transparent',
           past && 'opacity-60',
         )}
       >

@@ -50,8 +50,8 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
   return (
     <li
       className={cn(
-        'animate-fade-up flex gap-3 rounded-2xl bg-white p-3.5 shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.05)] ring-1',
-        ours ? 'ring-2 ring-indigo-500' : 'ring-slate-200/70',
+        'animate-fade-up flex gap-3 rounded-2xl bg-white p-3.5 shadow-soft ring-1',
+        ours ? 'ring-2 ring-indigo-500' : 'ring-transparent',
         past && 'opacity-55',
       )}
       style={{ animationDelay: `${delay}ms` }}

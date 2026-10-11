@@ -119,7 +119,7 @@ export function SeminarDuties() {
 
       <ul
         key={day}
-        className="animate-fade-up divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.05)] ring-1 ring-indigo-100"
+        className="animate-fade-up divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-indigo-100"
       >
         {SEMINAR_DUTY_ORDER.map((type) => (
           <DutyRow key={type} type={type} row={at(day, type)} />

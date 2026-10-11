@@ -1,17 +1,20 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ExternalLink, MapPin, Phone } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ExternalLink, Info, MapPin, Phone } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useDistrict } from '../context/DistrictContext';
 import { useToast } from '../context/ToastContext';
-import { cn, shortDate } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { Sheet, Skeleton } from './ui';
 import { InstallButton } from './InstallApp';
+import { DistrictSheet } from './DistrictWelcome';
 
 const ADMIN_TAP_COUNT = 5;
 
 export function Header() {
-  const { result, loading } = useBulletin();
-  const [mapOpen, setMapOpen] = useState(false);
+  const { result, loading, districts } = useBulletin();
+  const { district } = useDistrict();
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
   const toast = useToast();
   const taps = useRef<number[]>([]);
   const info = result?.data.churchInfo;
@@ -32,145 +35,83 @@ export function Header() {
   };
 
   return (
-    <header className="pt-safe sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl">
+    <header className="pt-safe sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-2.5">
-        <button
-          type="button"
-          onClick={onLogoTap}
-          aria-label="Чуулганы лого"
-          className="grid size-10 shrink-0 place-items-center active:scale-95"
-        >
-          <img src="/logo.png" alt="" className="size-10 object-contain" draggable={false} />
+        <button type="button" onClick={onLogoTap} aria-label="Чуулганы лого" className="shrink-0 active:scale-95">
+          <img src="/logo.png" alt="" className="size-9 object-contain" draggable={false} />
         </button>
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[15px] font-extrabold leading-tight tracking-tight text-slate-900">
+          <h1 className="truncate text-[14px] font-bold leading-tight tracking-tight text-slate-900">
             {info?.church_name ?? 'УВС БАПТИСТ ЧУУЛГАН'}
           </h1>
           {loading && !info ? (
-            <Skeleton className="mt-1 h-4 w-40" />
+            <Skeleton className="mt-1 h-3.5 w-28" />
           ) : (
-            <p className="mt-0.5 truncate text-[12.5px] font-medium text-slate-500">
-              Пастор {info?.pastor} · №{info?.issue_no} · {info && shortDate(info.issue_date)}
-            </p>
+            <p className="truncate text-xs text-slate-500">Пастор {info?.pastor}</p>
           )}
         </div>
 
+        {districts.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDistrictOpen(true)}
+            aria-label={district ? `Миний дүүрэг: ${district}` : 'Дүүрэг сонгох'}
+            className={cn(
+              'flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-semibold transition active:scale-95',
+              district ? 'bg-cyan-700 text-white' : 'bg-white text-slate-700 shadow-soft',
+            )}
+          >
+            <MapPin className="size-4" />
+            {district ?? 'Дүүрэг'}
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={onCall}
-          aria-label="Чуулган руу залгах"
-          className="grid size-10 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 transition active:scale-95"
+          onClick={() => setInfoOpen(true)}
+          aria-label="Байршил, холбоо барих"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-slate-600 shadow-soft transition active:scale-95"
         >
-          <Phone className="size-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setMapOpen(true)}
-          aria-label="Байршил харах"
-          className="grid size-10 shrink-0 place-items-center rounded-full bg-cyan-50 text-cyan-700 transition active:scale-95"
-        >
-          <MapPin className="size-5" />
+          <Info className="size-5" />
         </button>
       </div>
 
-      <DistrictSelector />
+      <DistrictSheet open={districtOpen} onClose={() => setDistrictOpen(false)} />
 
-      <Sheet open={mapOpen} onClose={() => setMapOpen(false)} title="Чуулганы байршил">
-        <img
-          src="/church.jpg"
-          alt="Увс Баптист Чуулганы барилга"
-          className="aspect-4/3 w-full rounded-2xl object-cover"
-          loading="lazy"
-        />
+      <Sheet open={infoOpen} onClose={() => setInfoOpen(false)} title="Чуулганы тухай">
+        <img src="/church.jpg" alt="Увс Баптист Чуулганы барилга" className="aspect-16/10 w-full rounded-2xl object-cover" loading="lazy" />
         {info?.address && (
-          <p className="mt-4 flex items-start gap-2 text-base text-slate-700">
-            <MapPin className="mt-0.5 size-5 shrink-0 text-cyan-700" />
+          <p className="mt-4 flex items-start gap-2 text-[15px] text-slate-600">
+            <MapPin className="mt-0.5 size-5 shrink-0 text-slate-400" />
             {info.address}
           </p>
         )}
-        <div className="mt-4 grid gap-2">
-          {info?.map_url && (
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onCall}
+            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 font-semibold text-slate-800 active:scale-[0.98]"
+          >
+            <Phone className="size-5" /> Залгах
+          </button>
+          {info?.map_url ? (
             <a
               href={info.map_url}
               target="_blank"
               rel="noreferrer"
-              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-700 px-4 font-semibold text-white shadow-sm active:scale-[0.98]"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-700 font-semibold text-white active:scale-[0.98]"
             >
-              <ExternalLink className="size-5" /> Газрын зураг дээр нээх
+              <ExternalLink className="size-5" /> Газрын зураг
             </a>
+          ) : (
+            <span />
           )}
-          <button
-            type="button"
-            onClick={onCall}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-4 font-semibold text-slate-800 active:scale-[0.98]"
-          >
-            <Phone className="size-5" /> {info?.phone ?? 'Залгах'}
-          </button>
+        </div>
+        <div className="mt-2">
           <InstallButton />
         </div>
       </Sheet>
     </header>
-  );
-}
-
-function DistrictSelector() {
-  const { districts } = useBulletin();
-  const { district, setDistrict } = useDistrict();
-  const toast = useToast();
-  const rowRef = useRef<HTMLDivElement>(null);
-
-  // Keep the selected pill visible, e.g. "31-р" on a narrow phone.
-  useEffect(() => {
-    const row = rowRef.current;
-    const pill = row?.querySelector<HTMLElement>('[aria-checked="true"]');
-    if (row && pill) row.scrollLeft = pill.offsetLeft - row.clientWidth / 2 + pill.offsetWidth / 2;
-  }, [district, districts.length]);
-
-  if (districts.length === 0) return null;
-
-  const pick = (d: string | null) => {
-    setDistrict(d);
-    if (d) toast(`${d}-р дүүргийн үүргүүдийг тодруулж байна`, 'info');
-  };
-
-  return (
-    <div className="mx-auto max-w-2xl">
-      <div
-        role="radiogroup"
-        aria-label="Миний дүүрэг"
-        ref={rowRef}
-        className="no-scrollbar relative flex gap-2 overflow-x-auto scroll-smooth px-4 pb-2.5"
-      >
-        <span className="flex shrink-0 items-center pr-1 text-[13px] font-semibold text-slate-500">Дүүрэг:</span>
-        <Pill active={district === null} onClick={() => pick(null)}>
-          Бүгд
-        </Pill>
-        {districts.map((d) => (
-          <Pill key={d} active={district === d} onClick={() => pick(d)}>
-            {d}-р
-          </Pill>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      onClick={onClick}
-      className={cn(
-        'min-h-11 shrink-0 rounded-full px-4 text-[15px] font-semibold transition-all duration-200 active:scale-95',
-        active
-          ? 'bg-cyan-700 text-white shadow-md shadow-cyan-900/20'
-          : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-      )}
-    >
-      {children}
-    </button>
   );
 }

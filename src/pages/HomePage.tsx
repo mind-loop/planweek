@@ -21,6 +21,13 @@ import type { Announcement, MemoryVerse } from '../types/database';
 import type { TabId } from '../components/BottomNav';
 import { Accordion, Card, EmptyState, SectionTitle, Sheet } from '../components/ui';
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return 'Өглөөний мэнд';
+  if (h < 18) return 'Өдрийн мэнд';
+  return 'Оройн мэнд';
+}
+
 export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   const { result } = useBulletin();
   if (!result) return null;
@@ -28,20 +35,28 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
 
   return (
     <div className="space-y-7">
-      {/* Hero */}
+      {/* Greeting */}
+      <section className="px-1 pt-2">
+        <p className="text-sm font-medium text-slate-500">
+          {weekdayMn(todayISO())}, {longDate(todayISO())}
+        </p>
+        <h2 className="mt-1 text-[28px] font-bold leading-tight tracking-tight text-slate-900">{greeting()} 👋</h2>
+      </section>
+
       <InstallBanner />
 
-      <section className="relative overflow-hidden rounded-3xl shadow-lg shadow-cyan-950/10">
-        <img src="/church.jpg" alt="" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-linear-to-t from-cyan-950/95 via-cyan-900/70 to-cyan-800/20" />
-        <div className="relative flex min-h-48 flex-col justify-end p-5 text-white">
-          <span className="mb-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[13px] font-semibold backdrop-blur">
-            <CalendarDays className="size-4" /> {longDate(churchInfo.issue_date)}, {weekdayMn(churchInfo.issue_date)}
+      {/* Issue banner */}
+      <section className="relative overflow-hidden rounded-3xl shadow-soft">
+        <img src="/church.jpg" alt="" className="h-40 w-full object-cover" />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-950/75 via-slate-900/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white">
+          <div>
+            <p className="text-xs font-medium text-white/80">Чуулганы Мэдээ</p>
+            <p className="text-xl font-bold leading-tight">Дугаар №{churchInfo.issue_no}</p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+            <CalendarDays className="size-3.5" /> {longDate(churchInfo.issue_date)}
           </span>
-          <h2 className="text-[28px] font-extrabold leading-tight tracking-tight">Чуулганы Мэдээ</h2>
-          <p className="mt-1 text-[15px] text-cyan-50/90">
-            Дугаар №{churchInfo.issue_no} · Пастор {churchInfo.pastor}
-          </p>
         </div>
       </section>
 
@@ -132,7 +147,7 @@ function MyDutiesCard({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
       {items.length === 0 ? (
         <Card className="p-4 text-[15px] text-slate-600">Ойрын 2 долоо хоногт танай дүүрэгт хуваарилсан үүрэг алга. 🙏</Card>
       ) : (
-        <Card highlighted className="divide-y divide-slate-100">
+        <Card className="divide-y divide-slate-100 overflow-hidden">
           {items.map(({ key, icon: Icon, tint, title, sub, tab }) => (
             <button
               key={key}
@@ -198,22 +213,10 @@ function AnnouncementCarousel({ items }: { items: Announcement[] }) {
         {items.map((a) => (
           <article
             key={a.id}
-            className={cn(
-              'flex w-[86%] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.06)] ring-1',
-              a.tag === 'featured' ? 'ring-amber-200' : 'ring-slate-200/70',
-            )}
+            className="flex w-[86%] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-white shadow-soft"
           >
-            {a.image_url ? (
-              <img src={a.image_url} alt="" loading="lazy" className="h-36 w-full object-cover" />
-            ) : (
-              <div
-                className={cn(
-                  'h-2',
-                  a.tag === 'featured' ? 'bg-linear-to-r from-amber-400 to-orange-400' : 'bg-linear-to-r from-cyan-500 to-cyan-700',
-                )}
-              />
-            )}
-            <div className="flex flex-1 flex-col p-4">
+            {a.image_url && <img src={a.image_url} alt="" loading="lazy" className="h-36 w-full object-cover" />}
+            <div className="flex flex-1 flex-col p-5">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <TagBadge tag={a.tag} />
                 {a.event_date && (
@@ -227,7 +230,7 @@ function AnnouncementCarousel({ items }: { items: Announcement[] }) {
               <button
                 type="button"
                 onClick={() => setOpenItem(a)}
-                className="mt-3 inline-flex min-h-11 w-fit items-center gap-1 rounded-xl bg-cyan-50 px-4 text-[15px] font-semibold text-cyan-800 transition active:scale-95"
+                className="-ml-1 mt-2 inline-flex min-h-11 w-fit items-center gap-1 px-1 text-[15px] font-semibold text-cyan-700 transition active:opacity-60"
               >
                 Дэлгэрэнгүй <ChevronRight className="size-4" />
               </button>
@@ -330,18 +333,18 @@ function VerseSection({ verses }: { verses: MemoryVerse[] }) {
     <section className="space-y-3">
       <SectionTitle icon={<BookMarked className="size-5" />} title="Цээжлэх эшлэл" />
 
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-cyan-700 via-cyan-800 to-slate-900 p-6 text-white shadow-lg shadow-cyan-950/20">
-        <span className="pointer-events-none absolute -right-2 -top-8 select-none font-serif text-[160px] leading-none text-white/10" aria-hidden>
+      <div className="relative overflow-hidden rounded-3xl bg-cyan-50 p-6 text-cyan-950">
+        <span className="pointer-events-none absolute -right-1 -top-7 select-none font-serif text-[150px] leading-none text-cyan-200/70" aria-hidden>
           “
         </span>
-        <p className="text-[13px] font-semibold uppercase tracking-wider text-cyan-200">Энэ долоо хоногийн эшлэл</p>
-        <blockquote className="mt-3 font-serif text-[21px] leading-relaxed">{current.text}</blockquote>
-        <p className="mt-3 text-lg font-bold text-cyan-100">— {current.reference}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700/80">Энэ долоо хоногийн эшлэл</p>
+        <blockquote className="relative mt-3 font-serif text-[21px] leading-relaxed text-slate-900">{current.text}</blockquote>
+        <p className="mt-3 text-base font-bold text-cyan-800">— {current.reference}</p>
         <div className="mt-5 flex gap-2">
           <button
             type="button"
             onClick={onCopy}
-            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-cyan-900 shadow-sm transition active:scale-[0.97]"
+            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-cyan-700 font-semibold text-white transition active:scale-[0.97]"
           >
             <Copy className="size-5" /> Хуулах
           </button>
@@ -349,7 +352,7 @@ function VerseSection({ verses }: { verses: MemoryVerse[] }) {
             type="button"
             onClick={onShare}
             aria-label="Хуваалцах"
-            className="grid min-h-12 w-14 place-items-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25 transition active:scale-95"
+            className="grid min-h-12 w-14 place-items-center rounded-2xl bg-white text-cyan-800 shadow-soft transition active:scale-95"
           >
             <Share2 className="size-5" />
           </button>

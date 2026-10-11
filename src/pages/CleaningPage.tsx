@@ -28,11 +28,11 @@ export function CleaningPage() {
       <button
         type="button"
         onClick={() => setGuideOpen(true)}
-        className="mb-4 flex min-h-14 w-full items-center gap-3 rounded-2xl bg-cyan-700 px-4 text-left font-semibold text-white shadow-md shadow-cyan-900/20 transition active:scale-[0.98]"
+        className="mb-4 flex min-h-14 w-full items-center gap-3 rounded-3xl bg-white px-4 text-left font-semibold text-slate-800 shadow-soft transition active:scale-[0.98]"
       >
-        <ListChecks className="size-6" />
-        <span className="flex-1">Цэвэрлэгээний ерөнхий заавар</span>
-        <ChevronRight className="size-5 opacity-80" />
+        <ListChecks className="size-5 text-cyan-700" />
+        <span className="flex-1">Ерөнхий заавар</span>
+        <ChevronRight className="size-5 text-slate-400" />
       </button>
 
       {sorted.length === 0 ? (

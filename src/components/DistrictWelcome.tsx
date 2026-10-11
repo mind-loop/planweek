@@ -5,24 +5,6 @@ import { useDistrict } from '../context/DistrictContext';
 import { cn } from '../lib/utils';
 import { Sheet } from './ui';
 
-const ASKED_KEY = 'ubc.districtAsked';
-
-function markAsked() {
-  try {
-    localStorage.setItem(ASKED_KEY, '1');
-  } catch {
-    /* ignore */
-  }
-}
-
-function alreadyAsked(): boolean {
-  try {
-    return localStorage.getItem(ASKED_KEY) === '1';
-  } catch {
-    return true; // no storage → don't nag on every visit
-  }
-}
-
 /** District picker sheet. The choice lives only on this device (localStorage). */
 export function DistrictSheet({ open, onClose, welcome = false }: { open: boolean; onClose: () => void; welcome?: boolean }) {
   const { districts } = useBulletin();
@@ -30,16 +12,17 @@ export function DistrictSheet({ open, onClose, welcome = false }: { open: boolea
 
   const pick = (d: string | null) => {
     setDistrict(d);
-    markAsked();
     onClose();
   };
 
   return (
     <Sheet open={open} onClose={onClose} title={welcome ? 'Тавтай морил 🙏' : 'Миний дүүрэг'}>
       <p className="text-[15px] leading-relaxed text-slate-500">
-        {welcome
-          ? 'Та аль дүүрэгт харьяалагддаг вэ? Танай дүүргийн үйлчлэл, цэвэрлэгээг тодруулж харуулна.'
-          : 'Сонгосон дүүргийн үүргүүд бүх хэсэгт тодорч харагдана.'}
+        {welcome && district
+          ? 'Таны дүүрэг зөв үү? Өөр бол доороос сонгоно уу.'
+          : welcome
+            ? 'Та аль дүүрэгт харьяалагддаг вэ? Танай дүүргийн үйлчлэл, цэвэрлэгээг тодруулж харуулна.'
+            : 'Сонгосон дүүргийн үүргүүд бүх хэсэгт тодорч харагдана.'}
       </p>
       <div className="mt-5 grid grid-cols-4 gap-2">
         {districts.map((d) => {
@@ -62,33 +45,43 @@ export function DistrictSheet({ open, onClose, welcome = false }: { open: boolea
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={() => (welcome ? (markAsked(), onClose()) : pick(null))}
-        className="mt-4 min-h-12 w-full rounded-2xl text-[15px] font-semibold text-slate-500 active:bg-slate-100"
-      >
-        {welcome ? 'Дараа сонгох' : 'Сонголтыг арилгах'}
-      </button>
+
+      {welcome && district ? (
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-4 min-h-12 w-full rounded-2xl bg-cyan-700 text-[15px] font-semibold text-white active:scale-[0.98]"
+        >
+          Үргэлжлүүлэх · {district}-р дүүрэг
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => (welcome ? onClose() : pick(null))}
+          className="mt-4 min-h-12 w-full rounded-2xl text-[15px] font-semibold text-slate-500 active:bg-slate-100"
+        >
+          {welcome ? 'Дараа сонгох' : 'Сонголтыг арилгах'}
+        </button>
+      )}
       <p className="mt-1 text-center text-xs text-slate-400">Зөвхөн энэ утсанд хадгалагдана</p>
     </Sheet>
   );
 }
 
-/** Asks once, on the very first visit. */
+/** A `?d=21` link already says which district — no need to ask. */
+const cameFromDistrictLink = () => {
+  try {
+    return new URLSearchParams(window.location.search).has('d');
+  } catch {
+    return false;
+  }
+};
+
+/** Asks on every app open / refresh; a saved district comes preselected. */
 export function DistrictWelcome() {
   const { districts, loading } = useBulletin();
-  const { district } = useDistrict();
-  const [done, setDone] = useState(alreadyAsked);
-  const open = !done && !loading && !district && districts.length > 0;
+  const [done, setDone] = useState(cameFromDistrictLink);
+  const open = !done && !loading && districts.length > 0;
 
-  return (
-    <DistrictSheet
-      welcome
-      open={open}
-      onClose={() => {
-        markAsked();
-        setDone(true);
-      }}
-    />
-  );
+  return <DistrictSheet welcome open={open} onClose={() => setDone(true)} />;
 }

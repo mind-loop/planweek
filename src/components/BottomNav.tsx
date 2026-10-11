@@ -15,7 +15,7 @@ export function BottomNav({ active, onChange }: { active: TabId; onChange: (tab:
   return (
     <nav
       aria-label="Үндсэн цэс"
-      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/95 backdrop-blur-xl"
+      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white/90 backdrop-blur-xl"
     >
       <ul className="mx-auto grid max-w-2xl grid-cols-5">
         {TABS.map(({ id, label, icon: Icon }) => {

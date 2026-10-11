@@ -54,7 +54,7 @@ export function InstallBanner() {
 
   return (
     <>
-      <div className="animate-fade-up flex items-center gap-3 rounded-2xl bg-white py-2.5 pl-2.5 pr-1 shadow-sm ring-1 ring-slate-200/70">
+      <div className="animate-fade-up flex items-center gap-3 rounded-2xl bg-white py-2.5 pl-2.5 pr-1 shadow-sm ring-1 ring-transparent">
         <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-[10px] ring-1 ring-slate-100" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-semibold leading-tight text-slate-900">Апп суулгах</p>

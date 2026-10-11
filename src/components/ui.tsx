@@ -18,8 +18,8 @@ export function Card({
   return (
     <div
       className={cn(
-        'relative rounded-2xl bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04),0_4px_12px_rgb(15_23_42/0.05)] ring-1 transition-all duration-300',
-        highlighted ? 'ring-2 ring-amber-400 shadow-amber-100' : 'ring-slate-200/70',
+        'relative rounded-3xl bg-white shadow-soft ring-1 transition-all duration-300',
+        highlighted ? 'ring-2 ring-amber-400' : 'ring-transparent',
         className,
       )}
     >
@@ -34,7 +34,7 @@ export function SectionTitle({ icon, title, action }: { icon?: ReactNode; title:
   return (
     <div className="mb-3 flex items-center justify-between gap-3 px-1">
       <h2 className="flex items-center gap-2 text-lg font-bold tracking-tight text-slate-900">
-        {icon && <span className="text-cyan-700">{icon}</span>}
+        {icon && <span className="text-slate-400">{icon}</span>}
         {title}
       </h2>
       {action}
@@ -116,7 +116,7 @@ export function Accordion({
         onClick={() => setOpen((o) => !o)}
         className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left font-semibold text-slate-800"
       >
-        {icon && <span className="text-cyan-700">{icon}</span>}
+        {icon && <span className="text-slate-400">{icon}</span>}
         <span className="flex-1">{title}</span>
         <ChevronDown
           className={cn('size-5 text-slate-400 transition-transform duration-300', open && 'rotate-180')}
