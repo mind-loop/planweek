@@ -252,7 +252,7 @@ function RosterGrid({
 
 /* ========================================================= Ням гараг */
 
-function sundaysOf(month: string): string[] {
+export function sundaysOf(month: string): string[] {
   const first = parseISODate(`${month}-01`);
   const d = new Date(first);
   d.setDate(1 + ((7 - first.getDay()) % 7));
@@ -264,7 +264,7 @@ function sundaysOf(month: string): string[] {
   return out;
 }
 
-function shiftMonth(month: string, by: number): string {
+export function shiftMonth(month: string, by: number): string {
   const d = parseISODate(`${month}-01`);
   d.setMonth(d.getMonth() + by);
   return toISODate(d).slice(0, 7);

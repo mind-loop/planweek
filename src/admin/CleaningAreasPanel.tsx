@@ -1,32 +1,39 @@
-import { useCallback, useEffect, useMemo, useState, type ClipboardEvent } from 'react';
-import { CalendarDays, ClipboardPaste, LoaderCircle, Plus, Save, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent } from 'react';
+import { ChevronLeft, ChevronRight, ClipboardPaste, LoaderCircle, Plus, Save, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useBulletin } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
-import { activeCleaning } from '../lib/cleaning';
-import { cn, dotDate, todayISO } from '../lib/utils';
+import { addDays, cn, shortDate, todayISO } from '../lib/utils';
 import type { CleaningSchedule } from '../types/database';
 import { Skeleton } from '../components/ui';
+import { shiftMonth, sundaysOf } from './DutyGridPanel';
 
-type Draft = { id?: string; district: string; area: string };
+/** A grid row = one area; `orig` is its name as saved (to detect renames). */
+type AreaRow = { key: string; name: string; orig?: string };
 
-const inputBase =
-  'h-12 w-full bg-transparent px-2 font-semibold text-slate-900 outline-none transition focus:bg-cyan-50 focus:ring-2 focus:ring-inset focus:ring-cyan-600';
-
+let seq = 0;
+const newKey = () => `r${++seq}`;
+const cellKey = (date: string, rowKey: string) => `${date}|${rowKey}`;
 const tasksOf = (rows: CleaningSchedule[]) => (rows.find((r) => r.tasks?.length)?.tasks ?? []).join('\n');
 
 /**
- * Цэвэрлэгээний хуваарь: which district looks after which area, saved as
- * dated versions ("хэрэгжих огноо"). Two-column, Excel-like editor.
+ * Цэвэрлэгээний хуваарь, entered like the Sunday duty grid:
+ * rows = areas, columns = the month's Sundays, cell = district(s).
+ * Each Sunday is stored as its own dated version in `cleaning_schedules`.
  */
 export function CleaningAreasPanel() {
   const toast = useToast();
   const { reload } = useBulletin();
+  const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [all, setAll] = useState<CleaningSchedule[] | null>(null);
-  const [date, setDate] = useState<string>('');
-  const [rows, setRows] = useState<Draft[]>([]);
+  const [rows, setRows] = useState<AreaRow[]>([]);
+  const [cells, setCells] = useState<Record<string, string>>({});
   const [guide, setGuide] = useState('');
   const [busy, setBusy] = useState(false);
+  const inputs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const sundays = useMemo(() => sundaysOf(month), [month]);
+  const monthRows = useMemo(() => (all ?? []).filter((r) => sundays.includes(r.start_date)), [all, sundays]);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase!.from('cleaning_schedules').select('*').order('start_date').order('sort_order');
@@ -38,79 +45,106 @@ export function CleaningAreasPanel() {
     void load();
   }, [load]);
 
-  const versions = useMemo(() => [...new Set((all ?? []).map((r) => r.start_date))].sort().reverse(), [all]);
-  const saved = useMemo(() => (all ?? []).filter((r) => r.start_date === date).sort((a, b) => a.sort_order - b.sort_order), [all, date]);
-  const isNew = !!date && saved.length === 0;
-
-  // First load → open the version in force today (or today's date if none yet).
-  useEffect(() => {
-    if (all && !date) setDate(activeCleaning(all).date ?? todayISO());
-  }, [all, date]);
-
-  // Switching date → load that version; a new date starts as a copy of the latest one.
-  useEffect(() => {
-    if (!all || !date) return;
-    if (saved.length) {
-      setRows(saved.map((r) => ({ id: r.id, district: r.district, area: r.area })));
-      setGuide(tasksOf(saved));
-    } else {
-      const template = activeCleaning(all, date).rows;
-      setRows(template.map((r) => ({ district: r.district, area: r.area })));
-      setGuide(tasksOf(template));
+  // (Re)build the grid whenever the month or the saved data changes.
+  const original = useMemo(() => {
+    if (!all) return null;
+    // Areas: those used this month (in saved order); otherwise the latest earlier schedule's areas.
+    const source = monthRows.length ? monthRows : (() => {
+      const before = [...new Set(all.map((r) => r.start_date))].filter((d) => d < sundays[0]).sort().at(-1);
+      return all.filter((r) => r.start_date === before);
+    })();
+    const names = [...new Set([...source].sort((a, b) => a.sort_order - b.sort_order).map((r) => r.area))];
+    const areaRows: AreaRow[] = names.map((n) => ({ key: newKey(), name: n, orig: monthRows.length ? n : undefined }));
+    const values: Record<string, string> = {};
+    for (const r of monthRows) {
+      const row = areaRows.find((a) => a.orig === r.area);
+      if (row) values[cellKey(r.start_date, row.key)] = r.district;
     }
-  }, [all, date, saved]);
+    return { areaRows, values, guide: tasksOf(monthRows.length ? monthRows : source) };
+  }, [all, monthRows, sundays]);
 
+  useEffect(() => {
+    if (!original) return;
+    setRows(original.areaRows);
+    setCells(original.values);
+    setGuide(original.guide);
+  }, [original]);
+
+  const cellChanged = (k: string) => (cells[k] ?? '').trim() !== (original?.values[k] ?? '');
   const dirty =
-    isNew ||
-    guide.trim() !== tasksOf(saved).trim() ||
-    rows.length !== saved.length ||
-    rows.some((r, i) => r.id !== saved[i]?.id || r.district.trim() !== saved[i].district || r.area.trim() !== saved[i].area);
+    !!original &&
+    (guide.trim() !== original.guide.trim() ||
+      rows.length !== original.areaRows.length ||
+      rows.some((r, i) => r.key !== original.areaRows[i]?.key || r.name.trim() !== original.areaRows[i].name) ||
+      sundays.some((d) => rows.some((r) => cellChanged(cellKey(d, r.key)))));
 
-  const update = (i: number, patch: Partial<Draft>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const addRows = (count: number) => {
+    const extra = Array.from({ length: count }, () => ({ key: newKey(), name: '' }));
+    setRows((rs) => [...rs, ...extra]);
+    return extra;
+  };
 
-  const onPaste = (e: ClipboardEvent<HTMLInputElement>, row: number, col: 0 | 1) => {
+  /** Paste an Excel block. In the area column the first pasted column is the area name. */
+  const onPaste = (e: ClipboardEvent<HTMLInputElement>, rowIdx: number, col: number /* -1 = area name */) => {
     const text = e.clipboardData.getData('text/plain');
     if (!/[\t\n]/.test(text.trim())) return;
     e.preventDefault();
-    const lines = text
+    const matrix = text
       .replace(/\r/g, '')
       .split('\n')
       .filter((l) => l.trim() !== '')
-      .map((l) => l.split('\t'));
-    setRows((rs) => {
-      const next = [...rs];
-      lines.forEach((cols, i) => {
-        const cur = next[row + i] ?? { district: '', area: '' };
-        next[row + i] =
-          col === 0
-            ? { ...cur, district: (cols[0] ?? cur.district).trim(), area: (cols[1] ?? cur.area).trim() }
-            : { ...cur, area: (cols[0] ?? cur.area).trim() };
+      .map((l) => l.split('\t').map((c) => c.trim()));
+    const needed = rowIdx + matrix.length - rows.length;
+    const target = needed > 0 ? [...rows, ...addRows(needed)] : rows;
+    setRows((rs) => rs.map((r, i) => (col === -1 && i >= rowIdx && i < rowIdx + matrix.length ? { ...r, name: matrix[i - rowIdx][0] ?? r.name } : r)));
+    setCells((c) => {
+      const next = { ...c };
+      matrix.forEach((vals, i) => {
+        const row = target[rowIdx + i];
+        const values = col === -1 ? vals.slice(1) : vals;
+        values.forEach((v, j) => {
+          const date = sundays[(col === -1 ? 0 : col) + j];
+          if (row && date) next[cellKey(date, row.key)] = v;
+        });
       });
       return next;
     });
-    toast(`${lines.length} мөр буулгалаа`, 'info');
+    toast(`${matrix.length} мөр буулгалаа`, 'info');
   };
 
   const save = async () => {
-    const clean = rows.map((r) => ({ ...r, district: r.district.trim(), area: r.area.trim() })).filter((r) => r.district || r.area);
-    if (clean.length === 0) return toast('Дор хаяж нэг мөр оруулна уу', 'error');
-    if (clean.some((r) => !r.district || !r.area)) return toast('Мөр бүрт дүүрэг ба хэсэг хоёуланг нь бичнэ үү', 'error');
+    if (!original) return;
+    const named = rows.map((r) => ({ ...r, name: r.name.trim() }));
+    const unnamed = named.findIndex((r) => !r.name && sundays.some((d) => (cells[cellKey(d, r.key)] ?? '').trim()));
+    if (unnamed >= 0) return toast(`${unnamed + 1}-р мөрөнд хэсгийн нэр бичнэ үү`, 'error');
 
     setBusy(true);
     const tasks = guide
       .split('\n')
       .map((t) => t.trim())
       .filter(Boolean);
-    const keep = new Set(clean.map((r) => r.id).filter(Boolean));
-    const deletes = saved.filter((r) => !keep.has(r.id)).map((r) => r.id);
-    const inserts = clean
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => !r.id)
-      .map(({ r, i }) => ({ start_date: date, district: r.district, area: r.area, tasks, sort_order: i }));
-    const updates = clean
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => r.id)
-      .map(({ r, i }) => supabase!.from('cleaning_schedules').update({ district: r.district, area: r.area, tasks, sort_order: i }).eq('id', r.id!));
+    const guideChanged = guide.trim() !== original.guide.trim();
+    const inserts: Record<string, unknown>[] = [];
+    const deletes: string[] = [];
+    const updates: PromiseLike<{ error: { message: string } | null }>[] = [];
+    const touched = new Set<string>();
+
+    named.forEach((row, i) => {
+      for (const date of sundays) {
+        const value = (cells[cellKey(date, row.key)] ?? '').trim();
+        const existing = row.orig ? monthRows.find((r) => r.start_date === date && r.area === row.orig) : undefined;
+        if (existing) touched.add(existing.id);
+        if (!value || !row.name) {
+          if (existing) deletes.push(existing.id);
+        } else if (!existing) {
+          inserts.push({ start_date: date, area: row.name, district: value, tasks, sort_order: i });
+        } else if (existing.district !== value || existing.area !== row.name || existing.sort_order !== i || guideChanged) {
+          updates.push(supabase!.from('cleaning_schedules').update({ district: value, area: row.name, sort_order: i, tasks }).eq('id', existing.id));
+        }
+      }
+    });
+    // Rows removed from the grid → their saved cells go too.
+    monthRows.forEach((r) => !touched.has(r.id) && deletes.push(r.id));
 
     const results = await Promise.all([
       deletes.length ? supabase!.from('cleaning_schedules').delete().in('id', deletes) : Promise.resolve({ error: null }),
@@ -120,119 +154,116 @@ export function CleaningAreasPanel() {
     setBusy(false);
     const failed = results.find((r) => r.error);
     if (failed?.error) return toast(failed.error.message, 'error');
-    toast(`${dotDate(date)}-ны хуваарь хадгалагдлаа`);
+    toast('Хадгалагдлаа');
     await load();
     void reload();
   };
 
-  const removeVersion = async () => {
-    if (!window.confirm(`${dotDate(date)}-ны цэвэрлэгээний хуваарийг бүхэлд нь устгах уу?`)) return;
-    const { error } = await supabase!.from('cleaning_schedules').delete().eq('start_date', date);
-    if (error) return toast(error.message, 'error');
-    toast('Устгагдлаа');
-    setDate('');
-    await load();
-    void reload();
-  };
-
-  if (!all || !date) return <Skeleton className="h-72 rounded-2xl" />;
+  if (!all || !original) return <Skeleton className="h-72 rounded-2xl" />;
 
   const today = todayISO();
-  const active = activeCleaning(all).date;
 
   return (
     <div className="space-y-3">
-      {/* Which version */}
-      <div className="rounded-2xl bg-white p-3 shadow-soft">
-        <label htmlFor="clean-date" className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
-          <CalendarDays className="size-4" /> Хэрэгжих огноо
-        </label>
-        <input
-          id="clean-date"
-          type="date"
-          value={date}
-          onChange={(e) => e.target.value && setDate(e.target.value)}
-          className="w-full min-h-12 rounded-xl border border-slate-300 bg-white px-3.5 text-base text-slate-900 shadow-sm outline-none focus:border-cyan-600 focus:ring-4 focus:ring-cyan-600/15"
-        />
-        {versions.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {versions.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setDate(v)}
-                className={cn(
-                  'inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-sm font-semibold transition',
-                  v === date ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700',
-                )}
-              >
-                {dotDate(v)}
-                {v === active && <span className={cn('text-[11px]', v === date ? 'text-emerald-300' : 'text-emerald-600')}>· мөрдөж буй</span>}
-                {v > today && <span className={cn('text-[11px]', v === date ? 'text-white/60' : 'text-slate-400')}>· удахгүй</span>}
-              </button>
-            ))}
-          </div>
-        )}
-        {isNew && (
-          <p className="mt-2.5 rounded-xl bg-cyan-50 px-3 py-2 text-sm text-cyan-800">
-            Шинэ хуваарь — сүүлийн хуваариас хуулж бэлдлээ. Засаад хадгална уу.
-          </p>
-        )}
+      {/* Month switcher */}
+      <div className="flex items-center justify-between rounded-2xl bg-white p-1.5 shadow-soft">
+        <button type="button" onClick={() => setMonth((m) => shiftMonth(m, -1))} aria-label="Өмнөх сар" className="grid size-11 place-items-center rounded-xl active:bg-slate-100">
+          <ChevronLeft className="size-5" />
+        </button>
+        <p className="font-bold text-slate-900">
+          {month.slice(0, 4)} оны {Number(month.slice(5))} сар
+        </p>
+        <button type="button" onClick={() => setMonth((m) => shiftMonth(m, 1))} aria-label="Дараа сар" className="grid size-11 place-items-center rounded-xl active:bg-slate-100">
+          <ChevronRight className="size-5" />
+        </button>
       </div>
 
       <p className="flex items-start gap-2 px-1 text-sm text-slate-500">
         <ClipboardPaste className="mt-0.5 size-4 shrink-0" />
-        Excel-ээс 2 баганаа (дүүрэг, хэсэг) хуулаад эхний нүдэнд буулгаж болно.
+        Мөр бүр нэг хэсэг, багана бүр нэг Ням гараг. Нүдэнд дүүрэг бичнэ. Excel-ээс «Хэсэг ⇥ 10/4 ⇥ 10/11 …» хүснэгтээ хуулаад эхний нүдэнд буулгаж болно.
       </p>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
-        <div className="grid grid-cols-[88px_1fr_44px] bg-slate-50 text-xs font-semibold text-slate-500">
-          <span className="px-3 py-2.5">Дүүрэг</span>
-          <span className="border-l border-slate-100 px-3 py-2.5">Хариуцах хэсэг</span>
-          <span />
-        </div>
-        {rows.map((r, i) => {
-          const before = saved.find((s) => s.id === r.id);
-          const changed = !before || before.district !== r.district.trim() || before.area !== r.area.trim();
-          return (
-            <div key={r.id ?? `new-${i}`} className={cn('grid grid-cols-[88px_1fr_44px] border-t border-slate-100', changed && 'bg-amber-50')}>
-              <input
-                value={r.district}
-                onChange={(e) => update(i, { district: e.target.value })}
-                onPaste={(e) => onPaste(e, i, 0)}
-                onFocus={(e) => e.target.select()}
-                placeholder="12, 31"
-                aria-label={`Дүүрэг, мөр ${i + 1}`}
-                className={cn(inputBase, 'text-center')}
-              />
-              <input
-                value={r.area}
-                onChange={(e) => update(i, { area: e.target.value })}
-                onPaste={(e) => onPaste(e, i, 1)}
-                onFocus={(e) => e.target.select()}
-                placeholder="Их танхим"
-                aria-label={`Хэсэг, мөр ${i + 1}`}
-                className={cn(inputBase, 'border-l border-slate-100')}
-              />
-              <button
-                type="button"
-                onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
-                aria-label="Мөр устгах"
-                className="grid place-items-center text-slate-300 active:text-red-600"
-              >
-                <Trash2 className="size-4" />
-              </button>
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => setRows((rs) => [...rs, { district: '', area: '' }])}
-          className="flex min-h-12 w-full items-center justify-center gap-2 border-t border-slate-100 text-[15px] font-semibold text-cyan-700 active:bg-cyan-50"
-        >
-          <Plus className="size-4" /> Мөр нэмэх
-        </button>
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="w-full border-separate border-spacing-0 overflow-hidden rounded-2xl bg-white text-[15px] shadow-soft">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 min-w-40 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold text-slate-500">Хэсэг</th>
+              {sundays.map((d) => (
+                <th key={d} className="min-w-18 bg-slate-50 px-1 py-2.5 text-center font-bold text-slate-800">
+                  {shortDate(d)}
+                  {d <= today && today < addDays(d, 7) && <span className="block text-[10px] font-semibold text-cyan-700">энэ 7 хоног</span>}
+                </th>
+              ))}
+              <th className="w-10 bg-slate-50" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, r) => {
+              const renamed = row.name.trim() !== (row.orig ?? '') || !row.orig;
+              return (
+                <tr key={row.key}>
+                  <th className={cn('sticky left-0 z-10 border-t border-slate-100 bg-white p-0', renamed && row.name && 'bg-amber-50')}>
+                    <input
+                      value={row.name}
+                      onChange={(e) => setRows((rs) => rs.map((x) => (x.key === row.key ? { ...x, name: e.target.value } : x)))}
+                      onPaste={(e) => onPaste(e, r, -1)}
+                      placeholder="Хэсгийн нэр"
+                      aria-label={`Хэсэг, мөр ${r + 1}`}
+                      className="h-12 w-full min-w-40 bg-transparent px-3 text-left text-sm font-semibold text-slate-800 outline-none focus:bg-cyan-50 focus:ring-2 focus:ring-inset focus:ring-cyan-600"
+                    />
+                  </th>
+                  {sundays.map((d, c) => {
+                    const k = cellKey(d, row.key);
+                    return (
+                      <td key={d} className="border-l border-t border-slate-100 p-0">
+                        <input
+                          ref={(el) => {
+                            inputs.current[k] = el;
+                          }}
+                          value={cells[k] ?? ''}
+                          onChange={(e) => setCells((cs) => ({ ...cs, [k]: e.target.value }))}
+                          onPaste={(e) => onPaste(e, r, c)}
+                          onFocus={(e) => e.target.select()}
+                          onKeyDown={(e) => {
+                            if (e.key !== 'Enter') return;
+                            e.preventDefault();
+                            const below = rows[r + 1];
+                            if (below) inputs.current[cellKey(d, below.key)]?.focus();
+                          }}
+                          enterKeyHint="next"
+                          aria-label={`${row.name || 'Хэсэг'}, ${shortDate(d)}`}
+                          className={cn(
+                            'h-12 w-full min-w-18 bg-transparent px-1 text-center font-semibold text-slate-900 outline-none transition focus:bg-cyan-50 focus:ring-2 focus:ring-inset focus:ring-cyan-600',
+                            cellChanged(k) && 'bg-amber-50',
+                          )}
+                        />
+                      </td>
+                    );
+                  })}
+                  <td className="border-t border-slate-100 p-0">
+                    <button
+                      type="button"
+                      onClick={() => setRows((rs) => rs.filter((x) => x.key !== row.key))}
+                      aria-label="Мөр устгах"
+                      className="grid h-12 w-10 place-items-center text-slate-300 active:text-red-600"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+
+      <button
+        type="button"
+        onClick={() => addRows(1)}
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-semibold text-cyan-700 shadow-soft active:bg-cyan-50"
+      >
+        <Plus className="size-4" /> Хэсэг нэмэх
+      </button>
 
       <div className="rounded-2xl bg-white p-4 shadow-soft">
         <label htmlFor="clean-guide" className="mb-1.5 block text-[15px] font-semibold text-slate-700">
@@ -240,7 +271,7 @@ export function CleaningAreasPanel() {
         </label>
         <textarea
           id="clean-guide"
-          rows={6}
+          rows={5}
           value={guide}
           onChange={(e) => setGuide(e.target.value)}
           placeholder={'Хана арчих\nЦонх арчих\nХогийн сав угааж, уут солих'}
@@ -249,20 +280,8 @@ export function CleaningAreasPanel() {
         <p className="mt-1 text-sm text-slate-500">Мөр бүрт нэг ажил. Бүх хэсэгт ижил үйлчилнэ.</p>
       </div>
 
-      {!isNew && (
-        <button
-          type="button"
-          onClick={removeVersion}
-          className="mx-auto flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-red-600 active:bg-red-50"
-        >
-          <Trash2 className="size-4" /> {dotDate(date)}-ны хуваарийг устгах
-        </button>
-      )}
-
       <div className="sticky bottom-3 z-20 flex items-center gap-3 rounded-2xl bg-white p-2 pl-4 shadow-lg ring-1 ring-slate-200">
-        <p className="flex-1 text-sm text-slate-500">
-          {isNew ? `Шинэ: ${dotDate(date)}-наас` : dirty ? 'Хадгалаагүй өөрчлөлт бий' : 'Өөрчлөлт алга'}
-        </p>
+        <p className="flex-1 text-sm text-slate-500">{dirty ? 'Хадгалаагүй өөрчлөлт бий' : 'Өөрчлөлт алга'}</p>
         <button
           type="button"
           onClick={save}
