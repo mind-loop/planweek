@@ -58,7 +58,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
   const sample: BulletinData =
     !isSupabaseConfigured || import.meta.env.DEV
       ? mock
-      : { ...mock, announcements: [], verses: [], plans: [], duties: [], fellowship: [], seminars: [], seminarDuties: [], planFiles: [] };
+      : { ...mock, announcements: [], verses: [], plans: [], duties: [], seminars: [], seminarDuties: [], planFiles: [] };
   const errors: string[] = [];
   const db = supabase;
   const today = todayISO();
@@ -69,7 +69,6 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     [verses, verseSrc],
     [plans, planSrc],
     [duties, dutySrc],
-    [fellowship, fellowSrc],
     [planFiles, planFileSrc],
     [seminars, seminarSrc],
     [seminarDuties, seminarDutySrc],
@@ -100,7 +99,6 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       sample.duties,
       errors,
     ),
-    withFallback('fellowship_schedules', db && db.from('fellowship_schedules').select('*').order('sort_order'), sample.fellowship, errors),
     withFallback('plan_files', db && db.from('plan_files').select('*').order('month', { ascending: false }).order('created_at', { ascending: false }).limit(24), sample.planFiles, errors),
     withFallback(
       'national_seminars',
@@ -123,7 +121,6 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       verses,
       plans,
       duties,
-      fellowship,
       planFiles,
       seminars,
       seminarDuties,
@@ -134,7 +131,6 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       verses: verseSrc,
       plans: planSrc,
       duties: dutySrc,
-      fellowship: fellowSrc,
       planFiles: planFileSrc,
       seminars: seminarSrc,
       seminarDuties: seminarDutySrc,

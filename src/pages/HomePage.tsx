@@ -4,6 +4,7 @@ import { useBulletin } from '../context/DataContext';
 import { InstallBanner } from '../components/InstallApp';
 import { issueNumber, longDate, todayISO, upcomingSunday, weekdayMn } from '../lib/utils';
 import type { Announcement } from '../types/database';
+import type { TabId } from '../components/BottomNav';
 import { HomeBanner } from './home/HomeBanner';
 import { VerseSection } from './home/VerseSection';
 import { FellowshipSection } from './home/FellowshipSection';
@@ -21,7 +22,7 @@ function greeting(): string {
  * Everything on one page, in the order of the paper sketch:
  * greeting → banner (онцлох + семинар) → эшлэл → нөхөрлөл → үйлчлэл → зарлал.
  */
-export function HomePage() {
+export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   const { result } = useBulletin();
   const [openItem, setOpenItem] = useState<Announcement | null>(null);
   if (!result) return null;
@@ -47,7 +48,7 @@ export function HomePage() {
 
       <VerseSection verses={verses} />
 
-      <FellowshipSection />
+      <FellowshipSection onNavigate={onNavigate} />
 
       <ServiceSection />
 

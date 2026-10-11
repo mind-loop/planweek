@@ -74,7 +74,7 @@ export function ServiceSection() {
                 type="button"
                 onClick={() => setWeekOpen(true)}
                 className={cn(
-                  'relative flex flex-col items-start rounded-3xl bg-white p-4 text-left shadow-soft transition active:scale-[0.98]',
+                  'relative flex flex-col items-start rounded-3xl bg-white p-4 text-left shadow-soft transition odd:last:col-span-2 active:scale-[0.98]',
                   mine && 'ring-2 ring-amber-400',
                 )}
               >

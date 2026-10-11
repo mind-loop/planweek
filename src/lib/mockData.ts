@@ -112,13 +112,6 @@ export function buildMockData(): BulletinData {
       { id: 'd8', week_date: next, duty_type: 'scripture', district: null, assignees: 'Д.Энхжин', notes: 'Филиппой 4' },
     ],
 
-    fellowship: [
-      { id: 'f1', group_name: 'Эзний өдөр', day_of_week: 'Ням', time: '11:00', location: 'Их танхим', leader: 'Ж.Билгүүн', notes: 'Нийт цуглаан', sort_order: 1 },
-      { id: 'f2', group_name: 'Лхагва гараг', day_of_week: 'Лхагва', time: '19:00', location: 'Их танхим', leader: null, notes: 'Залбирал, Библи судлал', sort_order: 2 },
-      { id: 'f3', group_name: 'Залуучууд', day_of_week: 'Баасан', time: '18:30', location: '2 давхрын танхим', leader: 'Г.Тэмүүлэн', notes: null, sort_order: 3 },
-      { id: 'f4', group_name: 'Бага анги', day_of_week: 'Ням', time: '11:00', location: 'Хүүхдийн өрөө', leader: 'Б.Сараа', notes: '6–12 нас', sort_order: 4 },
-      { id: 'f5', group_name: 'Ээжүүдийн нөхөрлөл', day_of_week: 'Мягмар', time: '14:00', location: 'Бага танхим', leader: 'Д.Оюунаа', notes: null, sort_order: 5 },
-    ],
 
     seminars: [],
     seminarDuties: [],

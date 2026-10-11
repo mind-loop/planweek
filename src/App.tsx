@@ -89,7 +89,7 @@ export default function App() {
           <PageSkeleton />
         ) : (
           <div key={tab} className="animate-fade-up">
-            {tab === 'home' && <HomePage />}
+            {tab === 'home' && <HomePage onNavigate={navigate} />}
             {tab === 'plan' && <PlanPage />}
           </div>
         )}

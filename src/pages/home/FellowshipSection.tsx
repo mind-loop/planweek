@@ -1,59 +1,67 @@
-import { Baby, BookOpen, Church, HandHeart, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { ChevronRight, MapPin, UserRound, Users } from 'lucide-react';
 import { useBulletin } from '../../context/DataContext';
-import { cn, todayISO, weekdayMn } from '../../lib/utils';
+import { addDays, cn, shortDate, todayISO, weekdayMn } from '../../lib/utils';
+import type { MonthlyPlan } from '../../types/database';
+import type { TabId } from '../../components/BottomNav';
 import { Card, SectionTitle } from '../../components/ui';
 
-/** Picks an icon/colour from keywords in the group name so admins don't have to. */
-function groupStyle(name: string): { icon: LucideIcon; tint: string } {
-  const n = name.toLowerCase();
-  if (n.includes('эзний')) return { icon: Church, tint: 'bg-cyan-50 text-cyan-700' };
-  if (n.includes('лхагва')) return { icon: BookOpen, tint: 'bg-violet-50 text-violet-700' };
-  if (n.includes('залуу')) return { icon: Sparkles, tint: 'bg-orange-50 text-orange-600' };
-  if (n.includes('бага') || n.includes('хүүхэд')) return { icon: Baby, tint: 'bg-pink-50 text-pink-600' };
-  if (n.includes('ээж') || n.includes('эмэгт')) return { icon: HandHeart, tint: 'bg-rose-50 text-rose-600' };
-  return { icon: Users, tint: 'bg-emerald-50 text-emerald-700' };
-}
-
-/** Нөхөрлөл — weekly groups; today's meetings float to the top. */
-export function FellowshipSection() {
+/** Нөхөрлөл — the next 7 days of Төлөвлөгөө items in the Нөхөрлөл category, by day. */
+export function FellowshipSection({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   const { result } = useBulletin();
-  const groups = result?.data.fellowship ?? [];
-  if (groups.length === 0) return null;
+  const today = todayISO();
+  const until = addDays(today, 6);
+  const items = (result?.data.plans ?? [])
+    .filter((p) => p.category === 'fellowship' && p.event_date >= today && p.event_date <= until)
+    .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.time ?? '').localeCompare(b.time ?? ''));
 
-  const todayName = weekdayMn(todayISO());
-  const sorted = [...groups].sort(
-    (a, b) => Number(b.day_of_week.trim() === todayName) - Number(a.day_of_week.trim() === todayName),
-  );
+  if (items.length === 0) return null;
+
+  const days = new Map<string, MonthlyPlan[]>();
+  items.forEach((p) => days.set(p.event_date, [...(days.get(p.event_date) ?? []), p]));
 
   return (
     <section>
-      <SectionTitle icon={<Users className="size-5" />} title="Нөхөрлөл" />
-      <Card className="divide-y divide-slate-100 overflow-hidden">
-        {sorted.map((g) => {
-          const { icon: Icon, tint } = groupStyle(g.group_name);
-          const isToday = g.day_of_week.trim() === todayName;
-          return (
-            <div key={g.id} className={cn('flex items-center gap-3 px-4 py-3.5', isToday && 'bg-cyan-50/50')}>
-              <span className={cn('grid size-11 shrink-0 place-items-center rounded-2xl', tint)}>
-                <Icon className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-slate-900">{g.group_name}</p>
-                <p className="truncate text-sm text-slate-500">
-                  {[g.location, g.leader].filter(Boolean).join(' · ') || g.notes}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-[15px] font-bold text-slate-900">{g.time}</p>
-                {isToday ? (
-                  <p className="text-xs font-bold text-cyan-700">Өнөөдөр</p>
-                ) : (
-                  <p className="text-xs font-medium text-slate-500">{g.day_of_week}</p>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <SectionTitle
+        icon={<Users className="size-5" />}
+        title="Нөхөрлөл"
+        action={
+          <button type="button" onClick={() => onNavigate('plan')} className="flex min-h-11 items-center gap-0.5 px-1 text-sm font-semibold text-cyan-700">
+            Бүгд <ChevronRight className="size-4" />
+          </button>
+        }
+      />
+      <Card className="overflow-hidden">
+        {[...days.entries()].map(([date, list], i) => (
+          <div key={date} className={cn(i > 0 && 'border-t border-slate-100')}>
+            <p className={cn('px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-wider', date === today ? 'text-cyan-700' : 'text-slate-400')}>
+              {date === today ? 'Өнөөдөр' : weekdayMn(date)} · {shortDate(date)}
+            </p>
+            <ul>
+              {list.map((p) => (
+                <li key={p.id} className="flex gap-3 px-4 py-2.5">
+                  <span className="w-12 shrink-0 pt-0.5 text-[15px] font-bold text-slate-900">{p.time?.split(/[–-]/)[0] ?? '—'}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-snug text-slate-900">{p.title}</p>
+                    {(p.speaker || p.location) && (
+                      <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-slate-500">
+                        {p.speaker && (
+                          <span className="inline-flex items-center gap-1">
+                            <UserRound className="size-3.5" /> {p.speaker}
+                          </span>
+                        )}
+                        {p.location && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="size-3.5" /> {p.location}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </Card>
     </section>
   );

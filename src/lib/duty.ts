@@ -2,13 +2,15 @@ import { Baby, BookOpen, Coffee, CookingPot, DoorOpen, SprayCan, type LucideIcon
 import type { DutyType, SeminarDailyDuty, SeminarDutyType, ServiceDuty } from '../types/database';
 import { addDays, todayISO, upcomingSunday } from './utils';
 
-export const DUTY_ORDER: DutyType[] = ['kitchen', 'childcare', 'welcome', 'scripture'];
+// Same row order as the printed roster.
+export const DUTY_ORDER: DutyType[] = ['welcome', 'childcare', 'scripture', 'kitchen', 'cleaning'];
 
 export const DUTY_META: Record<DutyType, { label: string; en: string; icon: LucideIcon; tint: string }> = {
   kitchen: { label: 'Гал тогоо', en: 'Kitchen', icon: CookingPot, tint: 'bg-orange-50 text-orange-700 ring-orange-100' },
   childcare: { label: 'Хүүхэд харах', en: 'Childcare', icon: Baby, tint: 'bg-pink-50 text-pink-700 ring-pink-100' },
   welcome: { label: 'Угталт', en: 'Welcome', icon: DoorOpen, tint: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
   scripture: { label: 'Эшлэл унших', en: 'Scripture', icon: BookOpen, tint: 'bg-violet-50 text-violet-700 ring-violet-100' },
+  cleaning: { label: 'Цэвэрлэгээ', en: 'Cleaning', icon: SprayCan, tint: 'bg-sky-50 text-sky-700 ring-sky-100' },
 };
 
 /**

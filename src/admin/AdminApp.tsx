@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   ArrowLeft,
-  CopyPlus,
   LoaderCircle,
   Lock,
   LogOut,
@@ -16,7 +15,7 @@ import {
 import { supabase } from '../lib/supabaseClient';
 import { useBulletin } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
-import { addDays, cn } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { Card, Sheet, Skeleton } from '../components/ui';
 import { ADMIN_GROUPS, type FieldConfig, type FormValues, type TableConfig } from './adminSchema';
 import { ImageField } from './ImageField';
@@ -24,6 +23,8 @@ import { removeByUrl } from '../lib/storage';
 import { AdminUsersPanel, type AdminRole } from './AdminUsersPanel';
 import { TagPicker } from './TagPicker';
 import { PlanFilesPanel } from './PlanFilesPanel';
+import { DutyGridPanel, SeminarGridPanel } from './DutyGridPanel';
+import { RecurringFillButton } from './RecurringFill';
 
 type Row = Record<string, unknown> & { id?: string | number };
 
@@ -231,7 +232,11 @@ function AdminDashboard({ email }: { email: string }) {
       )}
 
       {'panel' in section ? (
-        section.panel === 'files' ? (
+        section.panel === 'seminarGrid' ? (
+          <SeminarGridPanel />
+        ) : section.panel === 'dutyGrid' ? (
+          <DutyGridPanel />
+        ) : section.panel === 'files' ? (
           <PlanFilesPanel />
         ) : (
           <AdminUsersPanel myEmail={email} myRole={role} onRoleChanged={loadRole} />
@@ -510,20 +515,6 @@ function CrudPanel({ config }: { config: TableConfig }) {
     await afterChange('Устгагдлаа');
   };
 
-  /** Weekly shortcut: clone the most recent week's duties onto the following Sunday. */
-  const copyLastWeek = async () => {
-    if (!rows?.length) return;
-    const latest = rows.map((r) => String(r.week_date)).sort().at(-1)!;
-    const target = addDays(latest, 7);
-    if (!window.confirm(`${latest}-ний хуваарийг ${target} руу хуулах уу?`)) return;
-    const clones = rows
-      .filter((r) => r.week_date === latest)
-      .map(({ id: _id, created_at: _c, ...rest }) => ({ ...rest, week_date: target }));
-    const { error } = await supabase!.from(config.table).insert(clones);
-    if (error) return toast(error.message, 'error');
-    await afterChange(`${clones.length} мөр хуулагдлаа`);
-  };
-
   return (
     <div>
       <div className="mb-3 flex gap-2">
@@ -534,14 +525,13 @@ function CrudPanel({ config }: { config: TableConfig }) {
         >
           <Plus className="size-5" /> Шинэ нэмэх
         </button>
-        {config.table === 'service_duties' && (
-          <button
-            type="button"
-            onClick={copyLastWeek}
-            className="flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 font-semibold text-slate-700 ring-1 ring-slate-200 active:scale-[0.98]"
-          >
-            <CopyPlus className="size-5" /> 7 хоног хуулах
-          </button>
+        {config.table === 'monthly_plans' && (
+          <RecurringFillButton
+            onDone={() => {
+              void load();
+              void reload();
+            }}
+          />
         )}
         <button
           type="button"

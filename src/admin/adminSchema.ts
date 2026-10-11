@@ -4,12 +4,10 @@ import {
   Handshake,
   Megaphone,
   Settings,
-  Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { TableName } from '../types/database';
-import { DUTY_META, DUTY_ORDER, SEMINAR_DUTY_META, SEMINAR_DUTY_ORDER } from '../lib/duty';
-import { dotDate, shortDate, upcomingSunday, weekdayShort } from '../lib/utils';
+import { dotDate, shortDate, upcomingSunday } from '../lib/utils';
 
 export type FieldType = 'text' | 'textarea' | 'date' | 'number' | 'checkbox' | 'select' | 'choice' | 'lines' | 'tags' | 'image';
 
@@ -194,71 +192,8 @@ const nationalSeminars: TableConfig = {
   ],
 };
 
-const sundayDuties: TableConfig = {
-  table: 'service_duties',
-  label: 'Ням гараг',
-  orderBy: { column: 'week_date', ascending: false },
-  title: (r) => DUTY_META[r.duty_type as keyof typeof DUTY_META]?.label ?? s(r.duty_type),
-  subtitle: (r) => [shortDate(s(r.week_date)), r.district && `${s(r.district)}-р`, s(r.assignees)].filter(Boolean).join(' · '),
-  fields: [
-    {
-      key: 'duty_type',
-      label: 'Үйлчлэл',
-      type: 'choice',
-      required: true,
-      default: () => 'kitchen',
-      options: DUTY_ORDER.map((t) => ({ value: t, label: DUTY_META[t].label })),
-    },
-    { key: 'week_date', label: 'Ням гараг', type: 'date', required: true, default: () => upcomingSunday() },
-    { key: 'district', label: 'Дүүрэг', type: 'text', placeholder: '12, 31', hint: 'Олон бол таслалаар' },
-    { key: 'assignees', label: 'Хүмүүс', type: 'text', placeholder: 'Б.Сараа, Э.Номин' },
-    { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
-  ],
-};
 
-const seminarDuties: TableConfig = {
-  table: 'seminar_daily_duties',
-  label: 'Семинар',
-  orderBy: { column: 'day_date', ascending: true },
-  title: (r) => SEMINAR_DUTY_META[r.duty_type as keyof typeof SEMINAR_DUTY_META]?.label ?? s(r.duty_type),
-  subtitle: (r) => `${weekdayShort(s(r.day_date))} ${dotDate(s(r.day_date))} · ${s(r.assignees)}`,
-  fields: [
-    {
-      key: 'duty_type',
-      label: 'Үйлчлэл',
-      type: 'choice',
-      required: true,
-      default: () => 'welcome',
-      options: SEMINAR_DUTY_ORDER.map((t) => ({ value: t, label: SEMINAR_DUTY_META[t].label })),
-    },
-    { key: 'day_date', label: 'Өдөр', type: 'date', required: true },
-    { key: 'assignees', label: 'Хариуцагч', type: 'text', required: true, placeholder: '31, 32  эсвэл  Хайр баг', hint: 'Дүүргийн дугаар эсвэл багийн нэр' },
-    { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
-  ],
-};
 
-const fellowship: TableConfig = {
-  table: 'fellowship_schedules',
-  label: 'Долоо хоног бүр',
-  orderBy: { column: 'sort_order', ascending: true },
-  title: (r) => s(r.group_name),
-  subtitle: (r) => `${s(r.day_of_week)} ${s(r.time)}`,
-  fields: [
-    { key: 'group_name', label: 'Бүлэг', type: 'text', required: true, placeholder: 'Залуучууд' },
-    {
-      key: 'day_of_week',
-      label: 'Гараг',
-      type: 'choice',
-      required: true,
-      default: () => 'Ням',
-      options: ['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба', 'Ням'].map((d) => ({ value: d, label: d })),
-    },
-    { key: 'time', label: 'Цаг', type: 'text', required: true, placeholder: '18:30' },
-    { key: 'location', label: 'Өрөө / байршил', type: 'tags' },
-    { key: 'leader', label: 'Удирдагч', type: 'text' },
-    { key: 'notes', label: 'Тэмдэглэл', type: 'text' },
-  ],
-};
 
 export const ADMIN_TABLES: TableConfig[] = [
   churchInfo,
@@ -266,15 +201,12 @@ export const ADMIN_TABLES: TableConfig[] = [
   verses,
   plans,
   nationalSeminars,
-  sundayDuties,
-  seminarDuties,
-  fellowship,
 ];
 
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' });
 
 export interface AdminGroup {
   id: string;
@@ -283,7 +215,7 @@ export interface AdminGroup {
   sections: AdminSection[];
 }
 
-/** Six top-level tabs instead of ten; related tables become sub-tabs. */
+/** Five top-level tabs; related tables become sub-tabs. */
 export const ADMIN_GROUPS: AdminGroup[] = [
   { id: 'news', label: 'Зар', icon: Megaphone, sections: [{ id: 'announcements', label: 'Зар', table: announcements }] },
   { id: 'verse', label: 'Эшлэл', icon: BookMarked, sections: [{ id: 'verses', label: 'Эшлэл', table: verses }] },
@@ -302,11 +234,10 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     label: 'Үйлчлэл',
     icon: Handshake,
     sections: [
-      { id: 'sunday', label: 'Ням гараг', table: sundayDuties },
-      { id: 'seminar', label: 'Семинар', table: seminarDuties },
+      { id: 'sunday', label: 'Ням гараг', panel: 'dutyGrid' },
+      { id: 'seminar', label: 'Семинар (5 хоног)', panel: 'seminarGrid' },
     ],
   },
-  { id: 'fellowship', label: 'Нөхөрлөл', icon: Users, sections: [{ id: 'fellowship', label: 'Нөхөрлөл', table: fellowship }] },
   {
     id: 'settings',
     label: 'Тохиргоо',
