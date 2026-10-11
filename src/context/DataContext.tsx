@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { fetchBulletin, type BulletinResult } from '../lib/supabaseClient';
 import { parseDistricts, sortDistricts } from '../lib/utils';
+import { activeCleaning } from '../lib/cleaning';
 
 interface DataContextValue {
   result: BulletinResult | null;
@@ -33,6 +34,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DataContextValue>(() => {
     const set = new Set<string>();
     result?.data.duties.forEach((d) => parseDistricts(d.district).forEach((x) => set.add(x)));
+    activeCleaning(result?.data.cleaning ?? []).rows.forEach((c) => parseDistricts(c.district).forEach((x) => set.add(x)));
     // Seminar assignees mix districts ("31, 32") with team names ("Хайр баг"); keep numbers only.
     result?.data.seminarDuties.forEach((s) =>
       parseDistricts(s.assignees).forEach((x) => /^\d+$/.test(x) && set.add(x)),

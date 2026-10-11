@@ -112,6 +112,7 @@ export interface Tables {
   monthly_plans: MonthlyPlan;
   service_duties: ServiceDuty;
   plan_files: PlanFile;
+  cleaning_schedules: CleaningSchedule;
   national_seminars: NationalSeminar;
   seminar_daily_duties: SeminarDailyDuty;
 }
@@ -125,6 +126,7 @@ export interface BulletinData {
   plans: MonthlyPlan[];
   duties: ServiceDuty[];
   planFiles: PlanFile[];
+  cleaning: CleaningSchedule[];
   seminars: NationalSeminar[];
   seminarDuties: SeminarDailyDuty[];
 }
@@ -138,5 +140,21 @@ export interface PlanFile {
   file_path: string;
   file_url: string;
   mime_type: string | null;
+  created_at?: string;
+}
+
+/** Standing assignment: which district looks after which area of the building. */
+export interface CleaningSchedule {
+  id: string;
+  /** Comma-separated district numbers, e.g. "12, 31". */
+  district: string;
+  /** Area(s), e.g. "Хоолны заал-1, Аавуудын өрөө" */
+  area: string;
+  /** The schedule version this row belongs to takes effect on this date. */
+  start_date: string;
+  /** Cleaning steps (the same guide is kept on every row). */
+  tasks: string[];
+  notes: string | null;
+  sort_order: number;
   created_at?: string;
 }

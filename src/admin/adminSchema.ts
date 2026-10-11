@@ -206,7 +206,7 @@ export const ADMIN_TABLES: TableConfig[] = [
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' });
 
 export interface AdminGroup {
   id: string;
@@ -236,6 +236,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     sections: [
       { id: 'sunday', label: 'Ням гараг', panel: 'dutyGrid' },
       { id: 'seminar', label: 'Семинар (5 хоног)', panel: 'seminarGrid' },
+      { id: 'cleaning', label: 'Цэвэрлэгээ', panel: 'cleaning' },
     ],
   },
   {

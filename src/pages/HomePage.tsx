@@ -9,6 +9,7 @@ import { HomeBanner } from './home/HomeBanner';
 import { VerseSection } from './home/VerseSection';
 import { FellowshipSection } from './home/FellowshipSection';
 import { ServiceSection } from './home/ServiceSection';
+import { CleaningSection } from './home/CleaningSection';
 import { AnnouncementSheet, NoticesSection } from './home/Notices';
 
 function greeting(): string {
@@ -51,6 +52,8 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
       <FellowshipSection onNavigate={onNavigate} />
 
       <ServiceSection />
+
+      <CleaningSection />
 
       <NoticesSection items={notices} onOpen={setOpenItem} />
 

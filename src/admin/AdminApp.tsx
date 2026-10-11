@@ -24,6 +24,7 @@ import { AdminUsersPanel, type AdminRole } from './AdminUsersPanel';
 import { TagPicker } from './TagPicker';
 import { PlanFilesPanel } from './PlanFilesPanel';
 import { DutyGridPanel, SeminarGridPanel } from './DutyGridPanel';
+import { CleaningAreasPanel } from './CleaningAreasPanel';
 import { RecurringFillButton } from './RecurringFill';
 
 type Row = Record<string, unknown> & { id?: string | number };
@@ -232,7 +233,9 @@ function AdminDashboard({ email }: { email: string }) {
       )}
 
       {'panel' in section ? (
-        section.panel === 'seminarGrid' ? (
+        section.panel === 'cleaning' ? (
+          <CleaningAreasPanel />
+        ) : section.panel === 'seminarGrid' ? (
           <SeminarGridPanel />
         ) : section.panel === 'dutyGrid' ? (
           <DutyGridPanel />

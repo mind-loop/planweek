@@ -3,7 +3,7 @@ import type { DutyType, SeminarDailyDuty, SeminarDutyType, ServiceDuty } from '.
 import { addDays, todayISO, upcomingSunday } from './utils';
 
 // Same row order as the printed roster.
-export const DUTY_ORDER: DutyType[] = ['welcome', 'childcare', 'scripture', 'kitchen', 'cleaning'];
+export const DUTY_ORDER: DutyType[] = ['welcome', 'childcare', 'scripture', 'kitchen'];
 
 export const DUTY_META: Record<DutyType, { label: string; en: string; icon: LucideIcon; tint: string }> = {
   kitchen: { label: 'Гал тогоо', en: 'Kitchen', icon: CookingPot, tint: 'bg-orange-50 text-orange-700 ring-orange-100' },
