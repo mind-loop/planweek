@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Church, GraduationCap, Handshake, MapPin, Users } from 'lucide-react';
+import { MapPin, Users } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useDistrict } from '../context/DistrictContext';
 import { DUTY_META, DUTY_ORDER, dutyWeeks } from '../lib/duty';
-import { addDays, cn, districtLabel, shortDate, todayISO } from '../lib/utils';
+import { cn, districtLabel, shortDate } from '../lib/utils';
 import type { DutyType, ServiceDuty } from '../types/database';
-import { Card, MineBadge, SectionTitle } from '../components/ui';
-import { SeminarDuties } from './SeminarDuties';
+import { Card, MineBadge } from '../components/ui';
 
-function SundayDutyView() {
+/** Sunday duty roster with a this-week / next-week toggle. */
+export function SundayDutyView() {
   const { result } = useBulletin();
   const [weekIdx, setWeekIdx] = useState<0 | 1>(0);
   const duties = result?.data.duties ?? [];
@@ -102,62 +102,6 @@ function DutyCard({ type, rows, delay }: { type: DutyType; rows: ServiceDuty[]; 
           </ul>
         )}
       </Card>
-    </div>
-  );
-}
-
-type DutyView = 'sunday' | 'seminar';
-
-export function DutyPage() {
-  const { result } = useBulletin();
-  const seminarRows = result?.data.seminarDuties ?? [];
-  const today = todayISO();
-  // Open on the seminar roster when a seminar day falls within the next week.
-  const seminarSoon = seminarRows.some((r) => r.day_date >= today && r.day_date <= addDays(today, 7));
-  const [view, setView] = useState<DutyView>(seminarSoon ? 'seminar' : 'sunday');
-  const showSeminar = view === 'seminar' && seminarRows.length > 0;
-
-  return (
-    <div>
-      <SectionTitle icon={<Handshake className="size-5" />} title="Үйлчлэлийн хуваарь" />
-
-      {seminarRows.length > 0 && (
-        <div role="tablist" aria-label="Хуваарийн төрөл" className="mb-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'sunday'}
-            onClick={() => setView('sunday')}
-            className={cn(
-              'flex min-h-12 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold transition active:scale-95',
-              view === 'sunday' ? 'bg-cyan-700 text-white shadow-md shadow-cyan-900/20' : 'bg-white text-slate-700 ring-1 ring-slate-200',
-            )}
-          >
-            <Church className="size-4.5" /> Ням гараг
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'seminar'}
-            onClick={() => setView('seminar')}
-            className={cn(
-              'relative flex min-h-12 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold transition active:scale-95',
-              view === 'seminar'
-                ? 'bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-900/25'
-                : 'bg-indigo-50 text-indigo-800 ring-1 ring-indigo-200',
-            )}
-          >
-            <GraduationCap className="size-4.5" /> Семинар
-            {seminarSoon && view !== 'seminar' && (
-              <span className="absolute -right-1 -top-1 size-3 animate-pulse rounded-full bg-violet-500 ring-2 ring-slate-50" aria-label="Удахгүй" />
-            )}
-          </button>
-        </div>
-      )}
-
-      <div key={view} className="animate-fade-up">
-        {showSeminar ? <SeminarDuties /> : <SundayDutyView />}
-      </div>
     </div>
   );
 }

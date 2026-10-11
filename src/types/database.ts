@@ -16,7 +16,7 @@ export interface ChurchInfo {
   updated_at?: string;
 }
 
-export type AnnouncementTag = 'featured' | 'this_week' | null;
+export type AnnouncementTag = 'featured' | 'this_week' | 'seminar' | null;
 
 export interface Announcement {
   id: string;
@@ -41,6 +41,8 @@ export interface MemoryVerse {
   created_at?: string;
 }
 
+export type PlanCategory = 'seminar' | 'fellowship' | 'service';
+
 export interface MonthlyPlan {
   id: string;
   event_date: string;
@@ -50,6 +52,13 @@ export interface MonthlyPlan {
   speaker: string | null;
   location: string | null;
   notes: string | null;
+  /** Семинар / Нөхөрлөл / Үйлчлэл */
+  category: PlanCategory | null;
+  /** Семинар: last day (multi-day events). */
+  end_date: string | null;
+  /** Нөхөрлөл: which group, e.g. "Залуучууд". */
+  group_name: string | null;
+  image_url: string | null;
   created_at?: string;
 }
 
@@ -82,18 +91,6 @@ export interface FellowshipSchedule {
   created_at?: string;
 }
 
-export interface CleaningSchedule {
-  id: string;
-  /** Comma-separated district numbers, e.g. "12, 31". */
-  district: string;
-  /** Room or area, e.g. "Их танхим" */
-  area: string;
-  /** Checklist items for this area. */
-  tasks: string[];
-  notes: string | null;
-  sort_order: number;
-  created_at?: string;
-}
 
 /** Nationwide Bible seminar: which churches attend in which date range. */
 export interface NationalSeminar {
@@ -128,7 +125,7 @@ export interface Tables {
   monthly_plans: MonthlyPlan;
   service_duties: ServiceDuty;
   fellowship_schedules: FellowshipSchedule;
-  cleaning_schedules: CleaningSchedule;
+  plan_files: PlanFile;
   national_seminars: NationalSeminar;
   seminar_daily_duties: SeminarDailyDuty;
 }
@@ -142,7 +139,19 @@ export interface BulletinData {
   plans: MonthlyPlan[];
   duties: ServiceDuty[];
   fellowship: FellowshipSchedule[];
-  cleaning: CleaningSchedule[];
+  planFiles: PlanFile[];
   seminars: NationalSeminar[];
   seminarDuties: SeminarDailyDuty[];
+}
+
+/** Downloadable monthly schedule (PDF/PNG) stored in the `plan-files` bucket. */
+export interface PlanFile {
+  id: string;
+  /** First day of the month it covers. */
+  month: string;
+  title: string | null;
+  file_path: string;
+  file_url: string;
+  mime_type: string | null;
+  created_at?: string;
 }

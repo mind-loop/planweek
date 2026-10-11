@@ -58,7 +58,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
   const sample: BulletinData =
     !isSupabaseConfigured || import.meta.env.DEV
       ? mock
-      : { ...mock, announcements: [], verses: [], plans: [], duties: [], fellowship: [], cleaning: [] };
+      : { ...mock, announcements: [], verses: [], plans: [], duties: [], fellowship: [], seminars: [], seminarDuties: [], planFiles: [] };
   const errors: string[] = [];
   const db = supabase;
   const today = todayISO();
@@ -70,7 +70,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     [plans, planSrc],
     [duties, dutySrc],
     [fellowship, fellowSrc],
-    [cleaning, cleanSrc],
+    [planFiles, planFileSrc],
     [seminars, seminarSrc],
     [seminarDuties, seminarDutySrc],
   ] = await Promise.all([
@@ -101,7 +101,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       errors,
     ),
     withFallback('fellowship_schedules', db && db.from('fellowship_schedules').select('*').order('sort_order'), sample.fellowship, errors),
-    withFallback('cleaning_schedules', db && db.from('cleaning_schedules').select('*').order('sort_order'), sample.cleaning, errors),
+    withFallback('plan_files', db && db.from('plan_files').select('*').order('month', { ascending: false }).order('created_at', { ascending: false }).limit(24), sample.planFiles, errors),
     withFallback(
       'national_seminars',
       db && db.from('national_seminars').select('*').gte('end_date', addDays(today, -30)).order('start_date').order('sort_order'),
@@ -124,7 +124,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       plans,
       duties,
       fellowship,
-      cleaning: cleaning.map((c) => ({ ...c, tasks: c.tasks ?? [] })),
+      planFiles,
       seminars,
       seminarDuties,
     },
@@ -135,7 +135,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
       plans: planSrc,
       duties: dutySrc,
       fellowship: fellowSrc,
-      cleaning: cleanSrc,
+      planFiles: planFileSrc,
       seminars: seminarSrc,
       seminarDuties: seminarDutySrc,
     },

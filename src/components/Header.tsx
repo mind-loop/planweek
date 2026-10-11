@@ -48,7 +48,7 @@ export function Header() {
           {loading && !info ? (
             <Skeleton className="mt-1 h-3.5 w-28" />
           ) : (
-            <p className="truncate text-xs text-slate-500">Пастор {info?.pastor}</p>
+            /\p{L}/u.test(info?.pastor ?? '') && <p className="truncate text-xs text-slate-500">Пастор {info?.pastor}</p>
           )}
         </div>
 

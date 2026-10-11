@@ -105,3 +105,15 @@ export function splitList(value: string | null | undefined): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+/**
+ * Bulletin issue number = which Sunday of the year the bulletin's Sunday is.
+ * Restarts at 1 every January (2026-10-11 → 41).
+ */
+export function issueNumber(sundayISO: string = upcomingSunday()): number {
+  const d = parseISODate(sundayISO);
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const firstSunday = new Date(d.getFullYear(), 0, 1 + ((7 - jan1.getDay()) % 7));
+  const days = Math.round((d.getTime() - firstSunday.getTime()) / 86_400_000);
+  return Math.max(1, Math.floor(days / 7) + 1);
+}

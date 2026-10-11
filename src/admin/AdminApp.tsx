@@ -3,7 +3,6 @@ import type { Session } from '@supabase/supabase-js';
 import {
   ArrowLeft,
   CopyPlus,
-  Crown,
   LoaderCircle,
   Lock,
   LogOut,
@@ -11,7 +10,6 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Shield,
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
@@ -20,12 +18,14 @@ import { useBulletin } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { addDays, cn } from '../lib/utils';
 import { Card, Sheet, Skeleton } from '../components/ui';
-import { ADMIN_TABLES, type FieldConfig, type TableConfig } from './adminSchema';
+import { ADMIN_GROUPS, type FieldConfig, type FormValues, type TableConfig } from './adminSchema';
+import { ImageField } from './ImageField';
+import { removeByUrl } from '../lib/storage';
 import { AdminUsersPanel, type AdminRole } from './AdminUsersPanel';
 import { TagPicker } from './TagPicker';
+import { PlanFilesPanel } from './PlanFilesPanel';
 
 type Row = Record<string, unknown> & { id?: string | number };
-type FormValues = Record<string, string | boolean>;
 
 const inputClass =
   'w-full min-h-12 rounded-xl border border-slate-300 bg-white px-3.5 text-base text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-4 focus:ring-cyan-600/15';
@@ -151,11 +151,10 @@ function LoginForm() {
 
 /* -------------------------------------------------------------- Dashboard */
 
-const USERS_TAB = 'admins';
-
 function AdminDashboard({ email }: { email: string }) {
   const [role, setRole] = useState<AdminRole | null | undefined>(undefined);
-  const [active, setActive] = useState<string>(ADMIN_TABLES[1].table);
+  const [groupId, setGroupId] = useState(ADMIN_GROUPS[0].id);
+  const [sectionByGroup, setSectionByGroup] = useState<Record<string, string>>({});
 
   const loadRole = useCallback(async () => {
     const { data, error } = await supabase!.rpc('my_admin_role');
@@ -179,16 +178,13 @@ function AdminDashboard({ email }: { email: string }) {
     );
   }
 
-  const tabs = [
-    ...ADMIN_TABLES.map(({ table, label, icon }) => ({ id: table as string, label, icon })),
-    { id: USERS_TAB, label: 'Админууд', icon: role === 'superadmin' ? Crown : Shield },
-  ];
-  const config = ADMIN_TABLES.find((t) => t.table === active);
+  const group = ADMIN_GROUPS.find((g) => g.id === groupId) ?? ADMIN_GROUPS[0];
+  const section = group.sections.find((s) => s.id === sectionByGroup[group.id]) ?? group.sections[0];
 
   return (
     <div>
       <p className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-        Нэвтэрсэн: <b className="text-slate-700">{email}</b>
+        {email}
         <span
           className={cn(
             'rounded-full px-2 py-0.5 text-xs font-bold',
@@ -198,33 +194,61 @@ function AdminDashboard({ email }: { email: string }) {
           {role === 'superadmin' ? 'Superadmin' : 'Admin'}
         </span>
       </p>
-      <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
-        {tabs.map(({ id, label, icon: Icon }) => (
+
+      {/* Main sections: 3 × 2 grid, every label visible at once */}
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        {ADMIN_GROUPS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
-            onClick={() => setActive(id)}
+            onClick={() => setGroupId(id)}
             className={cn(
-              'flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-[15px] font-semibold transition',
-              active === id ? 'bg-cyan-700 text-white shadow' : 'bg-white text-slate-700 ring-1 ring-slate-200',
+              'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl text-sm font-semibold transition active:scale-95',
+              id === group.id ? 'bg-cyan-700 text-white shadow-md shadow-cyan-900/20' : 'bg-white text-slate-700 shadow-soft',
             )}
           >
-            <Icon className="size-4" /> {label}
+            <Icon className="size-5" /> {label}
           </button>
         ))}
       </div>
-      {active === USERS_TAB || !config ? (
-        <AdminUsersPanel myEmail={email} myRole={role} onRoleChanged={loadRole} />
-      ) : config.singleton ? (
-        <SingletonEditor key={config.table} config={config} />
+
+      {group.sections.length > 1 && (
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
+          {group.sections.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setSectionByGroup((m) => ({ ...m, [group.id]: s.id }))}
+              className={cn(
+                'min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition',
+                s.id === section.id ? 'bg-slate-900 text-white' : 'bg-slate-200/70 text-slate-700',
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {'panel' in section ? (
+        section.panel === 'files' ? (
+          <PlanFilesPanel />
+        ) : (
+          <AdminUsersPanel myEmail={email} myRole={role} onRoleChanged={loadRole} />
+        )
+      ) : section.table.singleton ? (
+        <SingletonEditor key={section.id} config={section.table} />
       ) : (
-        <CrudPanel key={config.table} config={config} />
+        <CrudPanel key={section.id} config={section.table} />
       )}
     </div>
   );
 }
 
 /* --------------------------------------------------------------- Helpers */
+
+const labelOf = (f: FieldConfig, v: FormValues) => (typeof f.label === 'function' ? f.label(v) : f.label);
+const isVisible = (f: FieldConfig, v: FormValues) => !f.showIf || f.showIf(v);
 
 function toFormValues(fields: FieldConfig[], row: Row | null): FormValues {
   const values: FormValues = {};
@@ -241,7 +265,8 @@ function toPayload(fields: FieldConfig[], values: FormValues): Row {
   const out: Row = {};
   for (const f of fields) {
     const v = values[f.key];
-    if (f.type === 'checkbox') out[f.key] = Boolean(v);
+    if (!isVisible(f, values)) out[f.key] = f.type === 'checkbox' ? false : null;
+    else if (f.type === 'checkbox') out[f.key] = Boolean(v);
     else if (f.type === 'number') out[f.key] = v === '' ? null : Number(v);
     else if (f.type === 'lines')
       out[f.key] = String(v)
@@ -256,6 +281,21 @@ function toPayload(fields: FieldConfig[], values: FormValues): Row {
   return out;
 }
 
+/** Postgres errors → plain Mongolian where we know the cause. */
+function friendlyError(message: string): string {
+  if (message.includes('end_after_start')) return 'Дуусах огноо эхлэх огнооноос өмнө байна';
+  if (message.includes('row-level security')) return 'Танд энэ үйлдлийг хийх эрх алга';
+  return message;
+}
+
+/** Image URLs a save replaced or cleared — safe to delete from storage afterwards. */
+function droppedImages(fields: FieldConfig[], before: Row | null, after: Row): string[] {
+  if (!before) return [];
+  return fields
+    .filter((f) => f.type === 'image' && typeof before[f.key] === 'string' && before[f.key] && before[f.key] !== after[f.key])
+    .map((f) => before[f.key] as string);
+}
+
 function RecordForm({
   fields,
   values,
@@ -266,62 +306,88 @@ function RecordForm({
   onChange: (key: string, value: string | boolean) => void;
 }) {
   return (
-    <div className="space-y-4">
-      {fields.map((f) => {
-        const id = `f-${f.key}`;
-        if (f.type === 'checkbox') {
+    <div className="space-y-5">
+      {fields
+        .filter((f) => isVisible(f, values))
+        .map((f) => {
+          const id = `f-${f.key}`;
+          const label = labelOf(f, values);
+          if (f.type === 'checkbox') {
+            return (
+              <label key={f.key} htmlFor={id} className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-3.5">
+                <input
+                  id={id}
+                  type="checkbox"
+                  checked={Boolean(values[f.key])}
+                  onChange={(e) => onChange(f.key, e.target.checked)}
+                  className="size-5 accent-cyan-700"
+                />
+                <span className="font-medium text-slate-800">{label}</span>
+              </label>
+            );
+          }
+          const common = {
+            id,
+            required: f.required,
+            placeholder: f.placeholder,
+            value: String(values[f.key] ?? ''),
+            onChange: (e: { target: { value: string } }) => onChange(f.key, e.target.value),
+          };
           return (
-            <label key={f.key} htmlFor={id} className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-3.5">
-              <input
-                id={id}
-                type="checkbox"
-                checked={Boolean(values[f.key])}
-                onChange={(e) => onChange(f.key, e.target.checked)}
-                className="size-5 accent-cyan-700"
-              />
-              <span className="font-medium text-slate-800">{f.label}</span>
-            </label>
+            <div key={f.key} className="animate-fade-in">
+              <label htmlFor={id} className="mb-1.5 block text-[15px] font-semibold text-slate-700">
+                {label}
+                {f.required && <span className="text-red-500"> *</span>}
+              </label>
+              {f.type === 'choice' ? (
+                <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
+                  {f.options?.map((o) => {
+                    const on = String(values[f.key] ?? '') === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => onChange(f.key, o.value)}
+                        className={cn(
+                          'min-h-11 rounded-full px-4 text-[15px] font-semibold transition active:scale-95',
+                          on ? 'bg-cyan-700 text-white' : 'bg-slate-100 text-slate-700',
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : f.type === 'image' ? (
+                <ImageField id={id} folder={f.folder ?? 'misc'} value={String(values[f.key] ?? '')} onChange={(v) => onChange(f.key, v)} />
+              ) : f.type === 'tags' ? (
+                <TagPicker
+                  id={id}
+                  required={f.required}
+                  placeholder={f.placeholder}
+                  value={String(values[f.key] ?? '')}
+                  onChange={(v) => onChange(f.key, v)}
+                  inputClass={inputClass}
+                />
+              ) : f.type === 'textarea' || f.type === 'lines' ? (
+                <textarea {...common} rows={f.type === 'lines' ? 5 : 4} className={cn(inputClass, 'py-3')} />
+              ) : f.type === 'select' ? (
+                <select {...common} className={inputClass}>
+                  {f.options?.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input {...common} type={f.type === 'number' ? 'number' : f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} className={inputClass} />
+              )}
+              {f.hint && <p className="mt-1 text-sm text-slate-500">{f.hint}</p>}
+            </div>
           );
-        }
-        const common = {
-          id,
-          required: f.required,
-          placeholder: f.placeholder,
-          value: String(values[f.key] ?? ''),
-          onChange: (e: { target: { value: string } }) => onChange(f.key, e.target.value),
-        };
-        return (
-          <div key={f.key}>
-            <label htmlFor={id} className="mb-1.5 block text-[15px] font-semibold text-slate-700">
-              {f.label}
-              {f.required && <span className="text-red-500"> *</span>}
-            </label>
-            {f.type === 'tags' ? (
-              <TagPicker
-                id={id}
-                required={f.required}
-                placeholder={f.placeholder}
-                value={String(values[f.key] ?? '')}
-                onChange={(v) => onChange(f.key, v)}
-                inputClass={inputClass}
-              />
-            ) : f.type === 'textarea' || f.type === 'lines' ? (
-              <textarea {...common} rows={f.type === 'lines' ? 5 : 4} className={cn(inputClass, 'py-3')} />
-            ) : f.type === 'select' ? (
-              <select {...common} className={inputClass}>
-                {f.options?.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input {...common} type={f.type === 'number' ? 'number' : f.type} inputMode={f.type === 'number' ? 'numeric' : undefined} className={inputClass} />
-            )}
-            {f.hint && <p className="mt-1 text-sm text-slate-500">{f.hint}</p>}
-          </div>
-        );
-      })}
+        })}
     </div>
   );
 }
@@ -365,7 +431,7 @@ function SingletonEditor({ config }: { config: TableConfig }) {
     setBusy(true);
     const { error } = await supabase!.from(config.table).upsert({ id: 1, ...toPayload(config.fields, values) });
     setBusy(false);
-    if (error) return toast(error.message, 'error');
+    if (error) return toast(friendlyError(error.message), 'error');
     toast('Хадгалагдлаа');
     void reload();
   };
@@ -429,7 +495,9 @@ function CrudPanel({ config }: { config: TableConfig }) {
         ? await supabase!.from(config.table).insert(payload)
         : await supabase!.from(config.table).update(payload).eq('id', editing.id);
     setBusy(false);
-    if (error) return toast(error.message, 'error');
+    if (error) return toast(friendlyError(error.message), 'error');
+    // Only now is it safe to drop images the edit replaced or cleared.
+    droppedImages(config.fields, editing === 'new' ? null : editing, payload).forEach((url) => void removeByUrl(url));
     setEditing(null);
     await afterChange(editing === 'new' ? 'Нэмэгдлээ' : 'Шинэчлэгдлээ');
   };
@@ -437,7 +505,8 @@ function CrudPanel({ config }: { config: TableConfig }) {
   const remove = async (row: Row) => {
     if (!window.confirm(`"${config.title(row)}"-г устгах уу?`)) return;
     const { error } = await supabase!.from(config.table).delete().eq('id', row.id);
-    if (error) return toast(error.message, 'error');
+    if (error) return toast(friendlyError(error.message), 'error');
+    droppedImages(config.fields, row, {}).forEach((url) => void removeByUrl(url));
     await afterChange('Устгагдлаа');
   };
 

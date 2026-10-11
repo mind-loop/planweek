@@ -8,9 +8,6 @@ import { PageSkeleton } from './components/ui';
 import { DistrictWelcome } from './components/DistrictWelcome';
 import { HomePage } from './pages/HomePage';
 import { PlanPage } from './pages/PlanPage';
-import { DutyPage } from './pages/DutyPage';
-import { FellowshipPage } from './pages/FellowshipPage';
-import { CleaningPage } from './pages/CleaningPage';
 import { AdminApp } from './admin/AdminApp';
 
 type Route = TabId | 'admin';
@@ -92,11 +89,8 @@ export default function App() {
           <PageSkeleton />
         ) : (
           <div key={tab} className="animate-fade-up">
-            {tab === 'home' && <HomePage onNavigate={navigate} />}
+            {tab === 'home' && <HomePage />}
             {tab === 'plan' && <PlanPage />}
-            {tab === 'duty' && <DutyPage />}
-            {tab === 'fellowship' && <FellowshipPage />}
-            {tab === 'cleaning' && <CleaningPage />}
           </div>
         )}
       </main>

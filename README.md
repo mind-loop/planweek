@@ -23,7 +23,7 @@ Without the env vars, or while a table is empty, the app shows built-in sample d
 
 ## Database setup (once)
 
-1. Supabase → **SQL Editor** → paste and run [`supabase/schema.sql`](supabase/schema.sql).
+1. Supabase → **SQL Editor** → run, in order, [`supabase/schema.sql`](supabase/schema.sql), [`002_seminar.sql`](supabase/002_seminar.sql) and [`003_plan_categories_files.sql`](supabase/003_plan_categories_files.sql). The last one adds plan categories plus the public `plan-files` storage bucket for the downloadable monthly schedule.
 2. **Authentication → Users → Add user**: create an email/password account for each editor.
 3. Allow those emails to edit:
    ```sql

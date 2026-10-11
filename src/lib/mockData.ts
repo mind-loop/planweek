@@ -93,12 +93,12 @@ export function buildMockData(): BulletinData {
     ],
 
     plans: [
-      { id: 'p1', event_date: addDays(month, 3), title: 'Удирдагчдын хурал', time: '19:00', speaker: 'Ж.Билгүүн', location: 'Оффис', notes: null },
-      { id: 'p2', event_date: sun, title: 'Эзний өдрийн цуглаан', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null },
-      { id: 'p3', event_date: addDays(sun, 3), title: 'Бэлтгэл анги', time: '18:00', speaker: 'Б.Мөнх-Эрдэнэ', location: 'Бага танхим', notes: 'Баптисм хүртэх хүсэлтэй хүмүүст' },
-      { id: 'p4', event_date: addDays(sun, 13), title: 'Библийн нэгдсэн семинар', time: '10:00–15:00', speaker: 'Зочин багш', location: 'Их танхим', notes: null },
-      { id: 'p5', event_date: addDays(sun, 14), title: 'Эзний зоог', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null },
-      { id: 'p6', event_date: addDays(sun, 20), title: 'Ээжүүдийн тусгай уулзалт', time: '14:00', speaker: 'Д.Оюунаа', location: '2 давхар', notes: null },
+      { id: 'p1', event_date: addDays(month, 3), title: 'Удирдагчдын хурал', time: '19:00', speaker: 'Ж.Билгүүн', location: 'Оффис', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p2', event_date: sun, title: 'Эзний өдрийн цуглаан', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p3', event_date: addDays(sun, 3), title: 'Бэлтгэл анги', time: '18:00', speaker: 'Б.Мөнх-Эрдэнэ', location: 'Бага танхим', notes: 'Баптисм хүртэх хүсэлтэй хүмүүст', category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p4', event_date: addDays(sun, 13), title: 'Библийн нэгдсэн семинар', time: '10:00–15:00', speaker: 'Зочин багш', location: 'Их танхим', notes: null, category: 'seminar', end_date: addDays(sun, 18), group_name: null, image_url: null },
+      { id: 'p5', event_date: addDays(sun, 14), title: 'Эзний зоог', time: '11:00', speaker: 'Ж.Билгүүн', location: 'Их танхим', notes: null, category: 'service', end_date: null, group_name: null, image_url: null },
+      { id: 'p6', event_date: addDays(sun, 20), title: 'Ээжүүдийн тусгай уулзалт', time: '14:00', speaker: 'Д.Оюунаа', location: '2 давхар', notes: null, category: 'fellowship', end_date: null, group_name: null, image_url: null },
     ],
 
     duties: [
@@ -122,51 +122,6 @@ export function buildMockData(): BulletinData {
 
     seminars: [],
     seminarDuties: [],
-
-    cleaning: [
-      {
-        id: 'c1',
-        district: '12, 31',
-        area: 'Их танхим',
-        tasks: ['Сандал, тайзны тоос арчих', 'Шал угаах', 'Цонхны тавцан арчих', 'Хогийн сав хоослох'],
-        notes: null,
-        sort_order: 1,
-      },
-      {
-        id: 'c2',
-        district: '13',
-        area: 'Гал тогоо',
-        tasks: ['Аяга таваг угааж, байранд нь хураах', 'Плитка, ширээ арчих', 'Хөргөгчийн хуучирсан хүнс хаях', 'Шал угаах'],
-        notes: null,
-        sort_order: 2,
-      },
-      {
-        id: 'c3',
-        district: '21',
-        area: 'Хүүхдийн өрөө, коридор',
-        tasks: ['Тоглоом ариутгах', 'Хивс тоос сорогчдох', 'Коридорын шал угаах'],
-        notes: null,
-        sort_order: 3,
-      },
-      {
-        id: 'c4',
-        district: '14, 22',
-        area: 'Ариун цэврийн өрөө, орох хаалга',
-        tasks: ['Угаалтуур, толь цэвэрлэх', 'Хаалганы бариул ариутгах', 'Гадна талын шат шүүрдэх'],
-        notes: null,
-        sort_order: 4,
-      },
-    ],
+    planFiles: [],
   };
 }
-
-/** Steps every cleaning team follows, regardless of area. */
-export const GENERAL_CLEANING_GUIDE: string[] = [
-  'Цэвэрлэгээг Ням гарагийн цуглааны дараа хийнэ.',
-  'Цонх, цонхны тавцан, хаалганы бариулыг арчина.',
-  'Сандал, ширээ, тавиурын тоосыг арчина.',
-  'Хогийн савыг хоосолж, шинэ уут хийнэ.',
-  'Шалыг шүүрдэж, нойтон алчуураар угаана.',
-  'Гэрэл, цонх, усыг унтраасан эсэхийг шалгана.',
-  'Дууссаны дараа хариуцсан ахлагчид мэдэгдэнэ.',
-];
