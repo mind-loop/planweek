@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, ListChecks, MapPin, SprayCan } from 'lucide-react';
 import { useBulletin } from '../../context/DataContext';
 import { useDistrict } from '../../context/DistrictContext';
-import { cn, longDate } from '../../lib/utils';
+import { cn, longDate, weekdayMn } from '../../lib/utils';
 import { activeCleaning } from '../../lib/cleaning';
 import { Card, SectionTitle, Sheet } from '../../components/ui';
 
@@ -47,8 +47,8 @@ export function CleaningSection() {
 
       {date && (
         <p className="mb-2 px-1 text-sm text-slate-500">
-          Мөрдөж эхэлсэн: {longDate(date)}
-          {next && <span className="font-semibold text-cyan-700"> · Шинэ хуваарь: {longDate(next)}</span>}
+          {weekdayMn(date)}, {longDate(date)}
+          {next && <span className="text-slate-400"> · Дараагийнх: {longDate(next)}</span>}
         </p>
       )}
 

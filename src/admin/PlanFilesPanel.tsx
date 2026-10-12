@@ -45,7 +45,8 @@ export function PlanFilesPanel() {
     let path: string;
     let url: string;
     try {
-      ({ path, url } = await uploadToBucket(file, `plan-files/${month}`));
+      // Printed schedules keep full resolution so small text stays readable.
+      ({ path, url } = await uploadToBucket(file, `plan-files/${month}`, { shrink: false }));
     } catch (err) {
       setBusy(false);
       return toast(err instanceof Error ? err.message : 'Файл оруулж чадсангүй', 'error');

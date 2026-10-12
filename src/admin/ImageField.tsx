@@ -11,7 +11,8 @@ export function ImageField({ id, value, onChange, folder }: { id: string; value:
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
-    const problem = validateUpload(file, IMAGE_TYPES);
+    // Size is checked after shrinking (large phone photos get scaled down).
+    const problem = validateUpload(file, IMAGE_TYPES, { checkSize: false });
     if (problem) return toast(problem, 'error');
     setBusy(true);
     try {

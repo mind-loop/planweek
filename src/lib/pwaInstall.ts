@@ -44,6 +44,26 @@ const isIOS = () =>
   // iPadOS reports itself as Mac
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+/** Messenger/Facebook/Instagram etc. open links in a webview that cannot install apps. */
+export const isInAppBrowser = () => /FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|KAKAOTALK|Telegram|WhatsApp/i.test(navigator.userAgent);
+
+/** Which iPhone/iPad browser — each hides "Add to Home Screen" in a different place. */
+export type IOSBrowser = 'safari' | 'chrome' | 'inapp' | 'other';
+export function iosBrowser(): IOSBrowser {
+  const ua = navigator.userAgent;
+  if (isInAppBrowser()) return 'inapp';
+  if (/CriOS/i.test(ua)) return 'chrome';
+  if (/FxiOS|EdgiOS|OPiOS|YaBrowser|DuckDuckGo/i.test(ua)) return 'other';
+  return 'safari';
+}
+
+/** Safari 26 (iOS 26) moved Share into the "⋯" menu; older versions have it in the toolbar. */
+export function iosMajor(): number {
+  const m = navigator.userAgent.match(/OS (\d+)_/);
+  const v = navigator.userAgent.match(/Version\/(\d+)/);
+  return Math.max(m ? Number(m[1]) : 0, v ? Number(v[1]) : 0);
+}
+
 function getMode(): InstallMode {
   if (installedNow || isStandalone()) return 'installed';
   if (deferred) return 'prompt';

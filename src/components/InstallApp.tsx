@@ -1,14 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { Download, EllipsisVertical, PlusSquare, Share, X } from 'lucide-react';
-import { promptInstall, useInstallMode } from '../lib/pwaInstall';
+import { Check, Copy, Download, Ellipsis, EllipsisVertical, PlusSquare, Share, X } from 'lucide-react';
+import { iosBrowser, iosMajor, isInAppBrowser, promptInstall, useInstallMode } from '../lib/pwaInstall';
 import { useToast } from '../context/ToastContext';
+import { cn } from '../lib/utils';
 import { Sheet } from './ui';
 
 const DISMISS_KEY = 'ubc.installDismissedAt';
 const DISMISS_DAYS = 7;
-
-/** Messenger/Facebook/Instagram etc. open links in a webview that cannot install apps. */
-const isInAppBrowser = () => /FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|KAKAOTALK|Telegram|WhatsApp/i.test(navigator.userAgent);
 
 function wasDismissed(): boolean {
   try {
@@ -36,6 +34,15 @@ function useInstallAction() {
   return { mode, install, help };
 }
 
+/** One-line hint shown right on the banner, so iPhone users often don't even need the guide. */
+function bannerHint(mode: ReturnType<typeof useInstallMode>): string {
+  if (mode !== 'ios') return 'Нүүр дэлгэцэнд нэмэх';
+  const b = iosBrowser();
+  if (b === 'inapp' || b === 'other') return 'Safari дээр нээж суулгана';
+  if (b === 'chrome') return 'Дээд талын □↑ → Нүүр дэлгэцэнд нэмэх';
+  return iosMajor() >= 26 ? 'Доод талын ⋯ → Хуваалцах → Нүүр дэлгэцэнд нэмэх' : 'Доод талын □↑ → Нүүр дэлгэцэнд нэмэх';
+}
+
 /** Dismissible card at the top of the home tab. */
 export function InstallBanner() {
   const { mode, install, help } = useInstallAction();
@@ -54,25 +61,20 @@ export function InstallBanner() {
 
   return (
     <>
-      <div className="animate-fade-up flex items-center gap-3 rounded-2xl bg-white py-2.5 pl-2.5 pr-1 shadow-sm ring-1 ring-transparent">
-        <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-[10px] ring-1 ring-slate-100" />
-        <div className="min-w-0 flex-1">
+      <div className="animate-fade-up flex items-center gap-3 rounded-2xl bg-white py-2.5 pl-2.5 pr-1 shadow-soft">
+        <img src="/icon-192.png" alt="" className="size-10 shrink-0 rounded-[10px]" />
+        <button type="button" onClick={install} className="min-w-0 flex-1 text-left">
           <p className="truncate text-[15px] font-semibold leading-tight text-slate-900">Апп суулгах</p>
-          <p className="mt-0.5 truncate text-[13px] leading-tight text-slate-500">Нүүр дэлгэцэнд нэмэх</p>
-        </div>
+          <p className="mt-0.5 line-clamp-2 text-[13px] leading-tight text-slate-500">{bannerHint(mode)}</p>
+        </button>
         <button
           type="button"
           onClick={install}
           className="h-9 shrink-0 rounded-full bg-cyan-700 px-4 text-sm font-semibold text-white transition active:scale-95"
         >
-          Татах
+          {mode === 'prompt' ? 'Татах' : 'Заавар'}
         </button>
-        <button
-          type="button"
-          onClick={dismiss}
-          aria-label="Хаах"
-          className="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100"
-        >
+        <button type="button" onClick={dismiss} aria-label="Хаах" className="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100">
           <X className="size-4" />
         </button>
       </div>
@@ -99,61 +101,179 @@ export function InstallButton() {
   );
 }
 
-function Step({ n, children }: { n: number; children: ReactNode }) {
+/* ------------------------------------------------------------------ guide */
+
+/** Icon drawn like the real iOS button so people can match it on screen. */
+function Glyph({ children, label }: { children?: ReactNode; label?: string }) {
   return (
-    <li className="flex items-start gap-3">
+    <span className="inline-flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 align-middle font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200">
+      {children}
+      {label && <span className="text-[15px] text-slate-900">{label}</span>}
+    </span>
+  );
+}
+
+function Step({ n, title, children }: { n: number; title: ReactNode; children?: ReactNode }) {
+  return (
+    <li className="flex gap-3 rounded-2xl bg-slate-50 p-3.5">
       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-cyan-700 text-sm font-bold text-white">{n}</span>
-      <span className="pt-1 text-base leading-relaxed text-slate-700">{children}</span>
+      <div className="min-w-0 pt-0.5">
+        <p className="text-base font-semibold leading-relaxed text-slate-900">{title}</p>
+        {children && <div className="mt-1.5 text-[15px] leading-relaxed text-slate-600">{children}</div>}
+      </div>
     </li>
   );
 }
 
-const Kbd = ({ children }: { children: ReactNode }) => (
-  <span className="mx-0.5 inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 font-semibold text-slate-900">{children}</span>
+function CopyLink() {
+  const toast = useToast();
+  const [done, setDone] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.origin);
+      setDone(true);
+      toast('Холбоос хуулагдлаа');
+    } catch {
+      toast(window.location.origin, 'info');
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className={cn(
+        'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl font-semibold transition active:scale-[0.98]',
+        done ? 'bg-emerald-50 text-emerald-700' : 'bg-cyan-700 text-white',
+      )}
+    >
+      {done ? <Check className="size-5" /> : <Copy className="size-5" />} {done ? 'Хуулагдлаа' : 'Холбоос хуулах'}
+    </button>
+  );
+}
+
+const Finish = () => (
+  <Step n={3} title={<>Баруун дээд буланд <Glyph label="Нэмэх (Add)" /> дарна</>}>
+    Нүүр дэлгэц дээр <b>Чуулганы Мэдээ</b> апп гарч ирнэ. Цаашид түүгээр нээгээрэй.
+  </Step>
+);
+
+const AddToHome = ({ n = 2 }: { n?: number }) => (
+  <Step
+    n={n}
+    title={
+      <>
+        Доош гүйлгээд <Glyph label="Нүүр дэлгэцэнд нэмэх">
+          <PlusSquare className="size-4" />
+        </Glyph>
+      </>
+    }
+  >
+    Англиар: <b>Add to Home Screen</b>. «Вэб апп болгон нээх» (Open as Web App) асаалттай байг.
+  </Step>
 );
 
 function InstallHelpSheet({ open, onClose, ios }: { open: boolean; onClose: () => void; ios: boolean }) {
-  const inApp = isInAppBrowser();
+  const browser = ios ? iosBrowser() : isInAppBrowser() ? 'inapp' : 'android';
+  const newSafari = iosMajor() >= 26;
+
   return (
-    <Sheet open={open} onClose={onClose} title="Апп татах заавар">
-      {inApp ? (
-        <div className="space-y-4">
-          <p className="rounded-xl bg-amber-50 p-3 text-[15px] text-amber-900">
-            Messenger, Facebook зэрэг апп дотроос суулгах боломжгүй. Эхлээд {ios ? 'Safari' : 'Chrome'} дээр нээнэ үү.
+    <Sheet open={open} onClose={onClose} title="Апп суулгах">
+      {browser === 'inapp' || browser === 'other' ? (
+        <div className="space-y-3">
+          <p className="rounded-2xl bg-amber-50 p-3.5 text-[15px] leading-relaxed text-amber-900">
+            {browser === 'inapp' ? 'Messenger, Facebook дотроос апп суулгах боломжгүй.' : 'Энэ хөтчөөс апп суулгах боломжгүй.'} Холбоосыг{' '}
+            <b>{ios ? 'Safari' : 'Chrome'}</b> дээр нээнэ үү.
           </p>
-          <ol className="space-y-4">
-            <Step n={1}>
-              Баруун дээд/доод буланд байрлах <Kbd>⋯</Kbd> цэсийг дарна.
+          <ol className="space-y-2.5">
+            <Step
+              n={1}
+              title={
+                <>
+                  <Glyph>
+                    <Ellipsis className="size-4" />
+                  </Glyph>{' '}
+                  цэснээс <b>«{ios ? 'Safari-д нээх' : 'Chrome-д нээх'}»</b>-г сонгоно
+                </>
+              }
+            >
+              Олдохгүй бол доорх товчоор холбоосыг хуулаад {ios ? 'Safari' : 'Chrome'}-ийн хаягийн мөрөнд буулгана.
             </Step>
-            <Step n={2}>
-              <Kbd>{ios ? 'Open in Safari' : 'Open in Chrome'}</Kbd> буюу «Хөтөч дээр нээх»-г сонгоно.
-            </Step>
-            <Step n={3}>Нээгдсэн хуудсан дээр «Татах» товчийг дахин дарна.</Step>
+            <Step n={2} title="Нээгдсэн хуудсан дээр «Апп суулгах» дахин дарна" />
           </ol>
+          <CopyLink />
         </div>
-      ) : ios ? (
-        <ol className="space-y-4">
-          <Step n={1}>
-            Safari-н доод талын <Kbd><Share className="size-4" /> Хуваалцах</Kbd> товчийг дарна.
+      ) : browser === 'chrome' ? (
+        <ol className="space-y-2.5">
+          <Step
+            n={1}
+            title={
+              <>
+                Хаягийн мөрний баруун талд{' '}
+                <Glyph>
+                  <Share className="size-4" />
+                </Glyph>{' '}
+                дарна
+              </>
+            }
+          />
+          <AddToHome />
+          <Finish />
+        </ol>
+      ) : browser === 'safari' ? (
+        <ol className="space-y-2.5">
+          <Step
+            n={1}
+            title={
+              newSafari ? (
+                <>
+                  Доод талын{' '}
+                  <Glyph>
+                    <Ellipsis className="size-4" />
+                  </Glyph>{' '}
+                  → <Glyph label="Хуваалцах">
+                    <Share className="size-4" />
+                  </Glyph>
+                </>
+              ) : (
+                <>
+                  Доод талын{' '}
+                  <Glyph label="Хуваалцах">
+                    <Share className="size-4" />
+                  </Glyph>{' '}
+                  товчийг дарна
+                </>
+              )
+            }
+          >
+            {newSafari ? (
+              <>Хуучин iPhone дээр шууд доод талын □↑ товч байдаг.</>
+            ) : (
+              <>
+                Товч харагдахгүй бол хуудсыг бага зэрэг доош гүйлгэ. iPad дээр дээд буланд байна.
+              </>
+            )}
           </Step>
-          <Step n={2}>
-            Доош гүйлгээд <Kbd><PlusSquare className="size-4" /> Add to Home Screen</Kbd> («Нүүр дэлгэцэнд нэмэх»)-г сонгоно.
-          </Step>
-          <Step n={3}>
-            Баруун дээд буланд <Kbd>Add</Kbd> («Нэмэх») дарна. Апп нүүр дэлгэц дээр гарч ирнэ.
-          </Step>
+          <AddToHome />
+          <Finish />
         </ol>
       ) : (
-        <ol className="space-y-4">
-          <Step n={1}>
-            Хөтчийн баруун дээд буланд <Kbd><EllipsisVertical className="size-4" /></Kbd> цэсийг дарна.
+        <ol className="space-y-2.5">
+          <Step
+            n={1}
+            title={
+              <>
+                Хөтчийн баруун дээд буланд{' '}
+                <Glyph>
+                  <EllipsisVertical className="size-4" />
+                </Glyph>{' '}
+                цэсийг дарна
+              </>
+            }
+          />
+          <Step n={2} title={<><Glyph label="Апп суулгах" /> эсвэл <Glyph label="Нүүр дэлгэцэнд нэмэх" /> сонгоно</>}>
+            Англиар: <b>Install app</b> / <b>Add to Home screen</b>
           </Step>
-          <Step n={2}>
-            <Kbd>Install app</Kbd> эсвэл <Kbd>Add to Home screen</Kbd> («Апп суулгах»)-г сонгоно.
-          </Step>
-          <Step n={3}>
-            <Kbd>Install</Kbd> («Суулгах») дарна.
-          </Step>
+          <Step n={3} title={<><Glyph label="Суулгах" /> дарна</>} />
         </ol>
       )}
     </Sheet>
