@@ -11,6 +11,7 @@ import { Sheet } from '../components/ui';
 import { ADMIN_TABLES, type FormValues } from './adminSchema';
 import { RecordForm, SaveButton, droppedImages, friendlyError, toFormValues, toPayload, type Row } from './AdminApp';
 import { RecurringFillButton } from './RecurringFill';
+import { MonthPdfButton } from '../pages/PlanPage';
 
 const config = ADMIN_TABLES.find((t) => t.table === 'monthly_plans')!;
 
@@ -28,7 +29,7 @@ function gridRange(month: string): [string, string] {
  */
 export function PlanCalendarPanel() {
   const toast = useToast();
-  const { reload } = useBulletin();
+  const { reload, result } = useBulletin();
   const today = todayISO();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [selected, setSelected] = useState<string>(today);
@@ -124,7 +125,14 @@ export function PlanCalendarPanel() {
         <RecurringFillButton onDone={() => void load().then(reload)} />
       </div>
 
-      <MonthCalendar month={month} onMonthChange={changeMonth} events={events} selected={selected} onSelect={setSelected} />
+      <MonthCalendar
+        month={month}
+        onMonthChange={changeMonth}
+        events={events}
+        selected={selected}
+        onSelect={setSelected}
+        footerAction={<MonthPdfButton month={month} plans={plans ?? []} churchName={result?.data.churchInfo.church_name ?? 'УВС'} />}
+      />
 
       <section className="rounded-3xl bg-white shadow-soft">
         <div className="flex items-center justify-between px-4 pb-1 pt-3">

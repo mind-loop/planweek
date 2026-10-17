@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, cn, parseISODate, toISODate, todayISO } from '../lib/utils';
 import type { MonthlyPlan, PlanCategory } from '../types/database';
@@ -86,6 +87,7 @@ export function MonthCalendar({
   selected,
   onSelect,
   maxChips = 3,
+  footerAction,
 }: {
   month: string;
   onMonthChange: (m: string) => void;
@@ -93,6 +95,7 @@ export function MonthCalendar({
   selected: string | null;
   onSelect: (date: string) => void;
   maxChips?: number;
+  footerAction?: ReactNode;
 }) {
   const first = parseISODate(`${month}-01`);
   const start = addDays(`${month}-01`, -first.getDay());
@@ -194,12 +197,16 @@ export function MonthCalendar({
         );
       })}
 
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-slate-100 px-3 py-2.5">
-        {Object.values(CATEGORY_COLORS).map((c) => (
-          <span key={c.label} className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <span className={cn('size-2 rounded-full', c.dot)} /> {c.label}
-          </span>
-        ))}
+      <div className="flex items-center gap-2 border-t border-slate-100 py-2 pl-3 pr-2">
+        <div className="flex min-w-0 flex-1 flex-wrap justify-center gap-x-4 gap-y-1 py-0.5">
+          {Object.values(CATEGORY_COLORS).map((c) => (
+            <span key={c.label} className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <span className={cn('size-2 rounded-full', c.dot)} /> {c.label}
+            </span>
+          ))}
+        </div>
+        {/* bottom-right slot, e.g. the admin-only PDF button */}
+        {footerAction}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronRight, Download, Eye, FileText, Image as ImageIcon } from 'lucide-react';
+import { CalendarDays, ChevronRight, Download, Eye, FileDown, FileText, Image as ImageIcon, LoaderCircle } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
+import { useToast } from '../context/ToastContext';
+import { useIsAdmin } from '../lib/useIsAdmin';
 import { cn, longDate, monthLabel, firstOfMonth, todayISO, weekdayMn } from '../lib/utils';
 import type { MonthlyPlan, PlanCategory, PlanFile } from '../types/database';
 import { SectionTitle } from '../components/ui';
@@ -21,6 +23,7 @@ export function PlanPage() {
   const [open, setOpen] = useState<MonthlyPlan | null>(null);
   const plans = result?.data.plans ?? [];
   const files = result?.data.planFiles ?? [];
+  const isAdmin = useIsAdmin(); // PDF export is for admins only
 
   const visible = filter === 'all' ? plans : plans.filter((p) => p.category === filter);
   const events = useMemo(() => plansByDate(visible), [visible]);
@@ -61,7 +64,15 @@ export function PlanPage() {
         })}
       </div>
 
-      <MonthCalendar month={month} onMonthChange={changeMonth} events={events} selected={selected} onSelect={setSelected} />
+      <MonthCalendar
+        month={month}
+        onMonthChange={changeMonth}
+        events={events}
+        selected={selected}
+        onSelect={setSelected}
+        footerAction={isAdmin && <MonthPdfButton month={month} plans={plans} churchName={result?.data.churchInfo.church_name ?? 'УВС'} />}
+      />
+
 
       {/* Selected day */}
       {selected && (
@@ -176,3 +187,39 @@ function PlanDownloads({ files }: { files: PlanFile[] }) {
   );
 }
 
+
+/* ------------------------------------------------------ Calendar → PDF */
+
+/** Admin-only: prints the month shown on the calendar as an A4 PDF (church calendar layout). */
+export function MonthPdfButton({ month, plans, churchName }: { month: string; plans: MonthlyPlan[]; churchName: string }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const count = plans.filter((p) => p.event_date.startsWith(month) || (p.end_date ?? '').startsWith(month)).length;
+  if (count === 0) return null;
+
+  const download = async () => {
+    setBusy(true);
+    try {
+      const { downloadMonthPdf } = await import('../lib/calendarPdf');
+      await downloadMonthPdf(month, plans, churchName);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'PDF үүсгэж чадсангүй', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={download}
+      disabled={busy}
+      aria-label={`${monthLabel(`${month}-01`)}ын төлөвлөгөөг PDF-ээр татах`}
+      title="PDF татах"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-cyan-700 px-3 text-sm font-semibold text-white transition active:scale-95 disabled:opacity-60"
+    >
+      {busy ? <LoaderCircle className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+      PDF
+    </button>
+  );
+}
