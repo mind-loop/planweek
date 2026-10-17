@@ -1,4 +1,4 @@
-import { PAGE_H, PAGE_W } from './art';
+import { PAGE_H, PAGE_W, flush } from './art';
 
 /*
  * PDF export of the weekly bulletin: each preview page (artwork + text, at
@@ -30,7 +30,7 @@ export async function downloadBulletinPdf(filename: string, scale = 2.5): Promis
 
       const canvas = await html2canvas(clone, { scale, width: PAGE_W, height: PAGE_H, backgroundColor: '#ffffff', useCORS: true, logging: false });
       if (i > 0) pdf.addPage('a4', 'landscape');
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+      pdf.addImage(flush(canvas, 'image/jpeg', 0.92), 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
     }
     pdf.save(filename);
   } finally {

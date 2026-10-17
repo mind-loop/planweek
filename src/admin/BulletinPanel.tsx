@@ -107,20 +107,30 @@ export function BulletinPanel() {
   }, [siteUrl]);
 
   // Page artwork (cover shows the issue number, date and pastor) — redrawn shortly after edits.
+  // Keyed on the values the cover shows, not the info object, so a data refresh doesn't redraw it.
   const churchInfo = result?.data.churchInfo;
+  const churchName = churchInfo?.church_name;
+  const pastor = churchInfo?.pastor;
   useEffect(() => {
-    if (!churchInfo) return;
+    if (churchName === undefined) return;
     let alive = true;
     const t = window.setTimeout(async () => {
-      const { renderPage1, renderPage2 } = await import('./bulletin/art');
-      const [page1, page2] = await Promise.all([renderPage1(churchInfo, { number, date }), renderPage2()]);
-      if (alive) setArt({ page1, page2 });
-    }, 250);
+      try {
+        const { renderPage1, renderPage2 } = await import('./bulletin/art');
+        // one after the other: drawing both at once doubles the peak canvas memory on iPhone
+        const page1 = await renderPage1({ ...churchInfo!, church_name: churchName, pastor: pastor ?? '' }, { number, date });
+        const page2 = await renderPage2();
+        if (alive) setArt({ page1, page2 });
+      } catch (e) {
+        if (alive) toast(e instanceof Error ? e.message : 'Загвар зурж чадсангүй', 'error');
+      }
+    }, 600);
     return () => {
       alive = false;
       window.clearTimeout(t);
     };
-  }, [churchInfo, number, date]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [churchName, pastor, number, date]);
 
   const issue = { number, date, qr, siteUrl };
   const render = (id: string): Rendered | null => {

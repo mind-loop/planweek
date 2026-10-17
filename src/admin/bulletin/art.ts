@@ -58,10 +58,23 @@ function canvas(w: number, h: number, scale: number) {
   const c = document.createElement('canvas');
   c.width = Math.round(w * scale);
   c.height = Math.round(h * scale);
-  const ctx = c.getContext('2d')!;
+  const ctx = c.getContext('2d');
+  if (!ctx) throw new Error('Зураг зурах санах ой хүрэлцсэнгүй. Хуудсаа дахин ачаална уу.');
   ctx.scale(scale, scale);
   ctx.textBaseline = 'top';
   return { c, ctx };
+}
+
+/**
+ * Encodes the canvas, then shrinks it to 0×0 so its pixels are released right
+ * away: iPhone Safari caps the total canvas memory of a page (a few hundred MB)
+ * and only frees canvases on garbage collection, so redrawing the artwork on
+ * every edit would otherwise run out and break all drawing.
+ */
+export function flush(c: HTMLCanvasElement, type: string, quality?: number): string {
+  const url = c.toDataURL(type, quality);
+  c.width = c.height = 0;
+  return url;
 }
 
 function cross(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) {
@@ -128,7 +141,7 @@ export async function renderHeading(text: string, style: HeadingStyle, scale = 3
     ctx.font = `700 ${size}px ${HEADING_FONT}`;
   }
   ctx.fillText(text.toUpperCase(), 8, (HEADING_H - BAR - size * 1.2) / 2 + 1);
-  return c.toDataURL('image/png');
+  return flush(c, 'image/png');
 }
 
 /** Page 1: outside of the sheet, with the full cover on the right third. */
@@ -189,6 +202,7 @@ export async function renderPage1(info: ChurchInfo, issue: { number: number; dat
     lctx.fillStyle = fade;
     lctx.fillRect(0, 0, layer.width, layer.height);
     ctx.drawImage(layer, x0, top, w, h);
+    layer.width = layer.height = 0; // free it now (iOS caps canvas memory)
   } catch {
     /* sky only */
   }
@@ -252,11 +266,20 @@ export async function renderPage1(info: ChurchInfo, issue: { number: number; dat
   ctx.fillText(pastor, x0 + nameW + 22, fy + 35);
   ctx.restore();
 
-  return c.toDataURL('image/jpeg', 0.9);
+  return flush(c, 'image/jpeg', 0.9);
 }
 
 /** Page 2: inside of the sheet. */
+const page2Cache = new Map<number, string>();
+
+/** Page 2 never changes, so it is drawn once per scale. */
 export async function renderPage2(scale = 2): Promise<string> {
+  let url = page2Cache.get(scale);
+  if (!url) page2Cache.set(scale, (url = drawPage2(scale)));
+  return url;
+}
+
+function drawPage2(scale: number): string {
   const { c, ctx } = canvas(PAGE_W, PAGE_H, scale);
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, PAGE_W, PAGE_H);
@@ -275,5 +298,5 @@ export async function renderPage2(scale = 2): Promise<string> {
   // faint crosses bottom-right
   cross(ctx, 1040, 470, 260, PALE);
   cross(ctx, 930, 640, 150, '#EEF7FA');
-  return c.toDataURL('image/jpeg', 0.92);
+  return flush(c, 'image/jpeg', 0.92);
 }
