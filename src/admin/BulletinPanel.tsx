@@ -9,6 +9,7 @@ import {
   GripVertical,
   ImagePlus,
   LoaderCircle,
+  Lock,
   Eye,
   Pencil,
   RotateCcw,
@@ -217,11 +218,12 @@ export function BulletinPanel() {
     const r = render(id);
     const { panel, index } = where(id);
     const custom = !isBuiltIn(id);
+    const locked = id === 'cover'; // fixed artwork on panel 3
     const iconBtn = 'grid size-8 place-items-center rounded-lg text-slate-500 active:bg-slate-100 disabled:opacity-25';
     return (
       <div
         key={id}
-        draggable
+        draggable={!locked}
         onDragStart={(e) => onDragStart(e, id)}
         onDragEnd={() => {
           setDragId(null);
@@ -244,13 +246,17 @@ export function BulletinPanel() {
         )}
       >
         <div className="flex items-start gap-1.5">
-          <GripVertical className="mt-0.5 size-4 shrink-0 cursor-grab text-slate-300" aria-hidden />
+          {locked ? <Lock className="mt-0.5 size-4 shrink-0 text-cyan-600" aria-hidden /> : <GripVertical className="mt-0.5 size-4 shrink-0 cursor-grab text-slate-300" aria-hidden />}
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
               {custom && (saved.custom.find((b) => b.id === id)?.kind === 'image' ? <ImagePlus className="size-3.5 text-violet-600" /> : <Type className="size-3.5 text-violet-600" />)}
               <span className="truncate">{titleOf(id)}</span>
             </p>
-            {r && <p className="truncate text-xs text-slate-500">{summarize(r)}</p>}
+            {locked ? (
+              <p className="truncate text-xs text-slate-500">Загвар зураг · байрлал тогтмол</p>
+            ) : (
+              r && <p className="truncate text-xs text-slate-500">{summarize(r)}</p>
+            )}
           </div>
           {custom && (
             <button type="button" onClick={() => setEditing(saved.custom.find((b) => b.id === id) ?? null)} aria-label="Засах" className={iconBtn}>
@@ -261,13 +267,13 @@ export function BulletinPanel() {
             type="button"
             onClick={() => (panel >= 0 ? move(id, -1) : custom ? deleteBlock(id) : undefined)}
             aria-label={panel >= 0 ? 'Хасах' : 'Устгах'}
-            className={cn(iconBtn, panel < 0 && !custom && 'hidden')}
+            className={cn(iconBtn, ((panel < 0 && !custom) || locked) && 'hidden')}
           >
             <X className="size-4" />
           </button>
         </div>
         {/* touch-friendly movement */}
-        <div className="mt-1 flex items-center gap-0.5 pl-5">
+        <div className={cn('mt-1 flex items-center gap-0.5 pl-5', locked && 'hidden')}>
           {panel >= 0 ? (
             <>
               <button type="button" disabled={index === 0} onClick={() => move(id, panel, index - 1)} aria-label="Дээш" className={iconBtn}>
@@ -276,10 +282,10 @@ export function BulletinPanel() {
               <button type="button" disabled={index === saved.panels[panel].length - 1} onClick={() => move(id, panel, index + 1)} aria-label="Доош" className={iconBtn}>
                 <ArrowDown className="size-3.5" />
               </button>
-              <button type="button" disabled={panel === 0} onClick={() => move(id, panel - 1)} aria-label="Өмнөх самбар" className={iconBtn}>
+              <button type="button" disabled={panel === 0} onClick={() => move(id, panel - 1 === 2 ? 1 : panel - 1)} aria-label="Өмнөх самбар" className={iconBtn}>
                 <ArrowLeft className="size-3.5" />
               </button>
-              <button type="button" disabled={panel === 5} onClick={() => move(id, panel + 1)} aria-label="Дараагийн самбар" className={iconBtn}>
+              <button type="button" disabled={panel === 5} onClick={() => move(id, panel + 1 === 2 ? 3 : panel + 1)} aria-label="Дараагийн самбар" className={iconBtn}>
                 <ArrowRight className="size-3.5" />
               </button>
             </>
@@ -312,8 +318,8 @@ export function BulletinPanel() {
       }}
       onDrop={(e) => onDropTo(e, i)}
       className={cn(
-        'flex min-h-40 flex-col gap-2 rounded-2xl border-2 border-dashed p-2 transition',
-        i === 2 ? 'border-cyan-300 bg-cyan-50/50' : 'border-slate-200 bg-slate-50',
+        'flex min-w-0 flex-col gap-2 rounded-2xl border-2 border-dashed p-2 transition',
+        i === 2 ? 'border-cyan-300 bg-cyan-50/50' : 'min-h-40 border-slate-200 bg-slate-50',
         over?.panel === i && over.index === saved.panels[i].length && 'border-cyan-500 bg-cyan-50',
       )}
     >
@@ -346,7 +352,7 @@ export function BulletinPanel() {
       <div className="lg:grid lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start lg:gap-6">
         <div className={cn('space-y-4', view === 'preview' && 'hidden lg:block')}>
       {/* Issue */}
-      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white p-3 shadow-soft">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white p-3 shadow-soft [&>label]:min-w-0">
         <label className="text-sm font-semibold text-slate-600">
           Дугаар №
           <input type="number" inputMode="numeric" value={number} onChange={(e) => setNumber(Number(e.target.value) || 0)} className={cn(inputClass, 'mt-1')} />
@@ -376,7 +382,7 @@ export function BulletinPanel() {
 
       <section>
         <h3 className="mb-2 px-1 text-sm font-bold text-slate-700">1-р хуудас · Гадна тал</h3>
-        <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-1">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-3 lg:grid-cols-[minmax(0,1fr)]">
           {[0, 1, 2].map((i) => (
             panel(i)
           ))}
@@ -384,7 +390,7 @@ export function BulletinPanel() {
       </section>
       <section>
         <h3 className="mb-2 px-1 text-sm font-bold text-slate-700">2-р хуудас · Дотор тал</h3>
-        <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-1">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-3 lg:grid-cols-[minmax(0,1fr)]">
           {[3, 4, 5].map((i) => (
             panel(i)
           ))}
@@ -409,7 +415,7 @@ export function BulletinPanel() {
         {pool.length === 0 ? (
           <p className="text-xs text-slate-400">Хасагдсан блок энд ирнэ. Энд чирж оруулбал мэдээнээс хасагдана.</p>
         ) : (
-          <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-1">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-3 lg:grid-cols-[minmax(0,1fr)]">
             {pool.map((id) => (
               chip(id)
             ))}
