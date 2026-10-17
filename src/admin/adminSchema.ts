@@ -3,6 +3,7 @@ import {
   CalendarDays,
   Handshake,
   Megaphone,
+  Printer,
   Settings,
   type LucideIcon,
 } from 'lucide-react';
@@ -222,7 +223,7 @@ export const ADMIN_TABLES: TableConfig[] = [
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' | 'bulletin' });
 
 export interface AdminGroup {
   id: string;
@@ -263,6 +264,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: 'cleaning', label: 'Цэвэрлэгээ', panel: 'cleaning' },
     ],
   },
+  { id: 'print', label: 'Хэвлэх', icon: Printer, sections: [{ id: 'bulletin', label: '7 хоногийн мэдээ', panel: 'bulletin' }] },
   {
     id: 'settings',
     label: 'Тохиргоо',
