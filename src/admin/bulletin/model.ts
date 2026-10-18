@@ -200,23 +200,28 @@ export function renderBuiltIn(kind: BuiltInKind, data: BulletinData, issue: Issu
       const list = data.plans
         .filter((p) => p.category === 'fellowship' && p.event_date >= sunday && p.event_date <= until)
         .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.time ?? '').localeCompare(b.time ?? ''));
-      const nodes: Node[] = [];
-      for (const p of list) {
-        nodes.push({ t: 'p', text: p.title.toUpperCase(), bold: true, align: 'center' });
-        nodes.push({ t: 'p', text: `Хэзээ: ${dotDate(p.event_date)} (${weekdayShort(p.event_date)})${p.time ? `, ${p.time} цагт` : ''}` });
-        if (p.location || p.speaker) nodes.push({ t: 'p', text: [p.location && `Хаана: ${p.location}`, p.speaker && `(${p.speaker})`].filter(Boolean).join('  ') });
-        nodes.push({ t: 'space' });
-      }
-      return { heading: 'Нөхөрлөлийн хуваарь', nodes: nodes.length ? nodes : [{ t: 'p', text: 'Энэ долоо хоногт нөхөрлөл ороогүй байна.', italic: true }] };
+      if (!list.length) return { heading: 'Нөхөрлөлийн хуваарь', nodes: [{ t: 'p', text: 'Энэ долоо хоногт нөхөрлөл ороогүй байна.', italic: true }] };
+      const rows = list.map((p) => [
+        `${dotDate(p.event_date)} ${weekdayShort(p.event_date)}${p.time ? `\n${p.time}` : ''}`,
+        p.title,
+        [p.location, p.speaker && `(${p.speaker})`].filter(Boolean).join(' '),
+      ]);
+      return {
+        heading: 'Нөхөрлөлийн хуваарь',
+        nodes: [{ t: 'table', head: ['Хэзээ', 'Нөхөрлөл', 'Хаана'], rows, widths: [21, 44, 35], boldCols: [0, 1] }],
+      };
     }
     case 'notices': {
-      const nodes: Node[] = data.announcements.flatMap((a): Node[] => [
-        { t: 'p', text: `• ${a.title}`, bold: true },
-        ...(a.summary ? [{ t: 'p', text: a.body || a.summary } as Node] : []),
-        ...(a.event_date ? [{ t: 'p', text: `Хэзээ: ${dotDate(a.event_date)} (${weekdayShort(a.event_date)})`, size: 9 } as Node] : []),
-        { t: 'space' },
+      if (!data.announcements.length) return { heading: 'Чуулганы мэдээ', nodes: [{ t: 'p', text: 'Зарлал ороогүй байна.', italic: true }] };
+      const rows = data.announcements.map((a) => [
+        a.title,
+        a.summary ? a.body || a.summary : '',
+        a.event_date ? `${dotDate(a.event_date)}\n${weekdayShort(a.event_date)}` : '',
       ]);
-      return { heading: 'Чуулганы мэдээ', nodes: nodes.length ? nodes : [{ t: 'p', text: 'Зарлал ороогүй байна.', italic: true }] };
+      return {
+        heading: 'Чуулганы мэдээ',
+        nodes: [{ t: 'table', head: ['Мэдээ', 'Дэлгэрэнгүй', 'Хэзээ'], rows, widths: [32, 50, 18], boldCols: [0] }],
+      };
     }
   }
 }
