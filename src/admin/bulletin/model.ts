@@ -166,7 +166,6 @@ export function renderBuiltIn(kind: BuiltInKind, data: BulletinData, issue: Issu
           { t: 'space' },
           { t: 'image', url: issue.qr, height: 120 },
           { t: 'p', text: 'Чуулганы Мэдээ апп', bold: true, align: 'center', color: '173A5E' },
-          { t: 'p', text: 'Утасныхаа камераар уншуулж нээнэ үү', align: 'center', size: 8.5 },
           ...(issue.siteUrl ? [{ t: 'p', text: issue.siteUrl.replace(/^https?:\/\//, ''), align: 'center', size: 8.5, color: '2E75B6' } as Node] : []),
         ],
       };
