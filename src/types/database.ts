@@ -111,7 +111,6 @@ export interface Tables {
   memory_verses: MemoryVerse;
   monthly_plans: MonthlyPlan;
   service_duties: ServiceDuty;
-  plan_files: PlanFile;
   cleaning_schedules: CleaningSchedule;
   banners: Banner;
   national_seminars: NationalSeminar;
@@ -126,23 +125,10 @@ export interface BulletinData {
   verses: MemoryVerse[];
   plans: MonthlyPlan[];
   duties: ServiceDuty[];
-  planFiles: PlanFile[];
   cleaning: CleaningSchedule[];
   banners: Banner[];
   seminars: NationalSeminar[];
   seminarDuties: SeminarDailyDuty[];
-}
-
-/** Downloadable monthly schedule (PDF/PNG) stored in the `plan-files` bucket. */
-export interface PlanFile {
-  id: string;
-  /** First day of the month it covers. */
-  month: string;
-  title: string | null;
-  file_path: string;
-  file_url: string;
-  mime_type: string | null;
-  created_at?: string;
 }
 
 /** Standing assignment: which district looks after which area of the building. */

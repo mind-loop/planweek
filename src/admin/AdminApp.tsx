@@ -22,7 +22,6 @@ import { ImageField } from './ImageField';
 import { removeByUrl } from '../lib/storage';
 import { AdminUsersPanel, type AdminRole } from './AdminUsersPanel';
 import { TagPicker } from './TagPicker';
-import { PlanFilesPanel } from './PlanFilesPanel';
 import { DutyGridPanel, SeminarGridPanel } from './DutyGridPanel';
 import { CleaningAreasPanel } from './CleaningAreasPanel';
 import { PlanCalendarPanel } from './PlanCalendarPanel';
@@ -248,8 +247,6 @@ function AdminDashboard({ email }: { email: string }) {
           <SeminarGridPanel />
         ) : section.panel === 'dutyGrid' ? (
           <DutyGridPanel />
-        ) : section.panel === 'files' ? (
-          <PlanFilesPanel />
         ) : (
           <AdminUsersPanel myEmail={email} myRole={role} onRoleChanged={loadRole} />
         )

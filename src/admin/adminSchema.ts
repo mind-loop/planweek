@@ -235,7 +235,7 @@ export const ADMIN_TABLES: TableConfig[] = [
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'files' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' | 'bulletin' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' | 'bulletin' });
 
 export interface AdminGroup {
   id: string;
@@ -262,7 +262,6 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     icon: CalendarDays,
     sections: [
       { id: 'plans', label: 'Календарь', panel: 'planCalendar' },
-      { id: 'files', label: 'Сарын файл', panel: 'files' },
       { id: 'national', label: 'Бүх чуулган', panel: 'national' },
     ],
   },

@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronRight, Download, Eye, FileDown, FileText, Image as ImageIcon, LoaderCircle } from 'lucide-react';
+import { ChevronRight, FileDown, LoaderCircle } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useIsAdmin } from '../lib/useIsAdmin';
-import { cn, longDate, monthLabel, firstOfMonth, todayISO, weekdayMn } from '../lib/utils';
-import type { MonthlyPlan, PlanCategory, PlanFile } from '../types/database';
-import { SectionTitle } from '../components/ui';
-import { FileViewer } from '../components/FileViewer';
+import { cn, longDate, monthLabel, todayISO, weekdayMn } from '../lib/utils';
+import type { MonthlyPlan, PlanCategory } from '../types/database';
 import { CATEGORY_COLORS, MonthCalendar, categoryStyle, plansByDate } from '../components/MonthCalendar';
 import { PlanDetailSheet } from '../components/PlanDetailSheet';
 
 type Filter = 'all' | PlanCategory;
 const CATEGORIES = Object.keys(CATEGORY_COLORS) as PlanCategory[];
 
-/** Сарын төлөвлөгөө: downloadable schedule + a calendar; tap a day, then an event for details. */
+/** Сарын төлөвлөгөө: a calendar; tap a day, then an event for details. */
 export function PlanPage() {
   const { result } = useBulletin();
   const today = todayISO();
@@ -22,7 +20,6 @@ export function PlanPage() {
   const [selected, setSelected] = useState<string | null>(today);
   const [open, setOpen] = useState<MonthlyPlan | null>(null);
   const plans = result?.data.plans ?? [];
-  const files = result?.data.planFiles ?? [];
   const isAdmin = useIsAdmin(); // PDF export is for admins only
 
   const visible = filter === 'all' ? plans : plans.filter((p) => p.category === filter);
@@ -37,10 +34,6 @@ export function PlanPage() {
 
   return (
     <div className="space-y-5">
-      <SectionTitle icon={<CalendarDays className="size-5" />} title="Сарын төлөвлөгөө" />
-
-      <PlanDownloads files={files} />
-
       {/* Category filter */}
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="tablist" aria-label="Ангилал">
         {(['all', ...CATEGORIES] as Filter[]).map((f) => {
@@ -72,7 +65,6 @@ export function PlanPage() {
         onSelect={setSelected}
         footerAction={isAdmin && <MonthPdfButton month={month} plans={plans} churchName={result?.data.churchInfo.church_name ?? 'УВС'} />}
       />
-
 
       {/* Selected day */}
       {selected && (
@@ -109,84 +101,6 @@ export function PlanPage() {
     </div>
   );
 }
-
-/* --------------------------------------------------------- Downloads */
-
-function downloadUrl(f: PlanFile): string {
-  const ext = f.file_path.split('.').pop() ?? 'pdf';
-  const name = `${f.title || monthLabel(f.month)}.${ext}`;
-  // Supabase Storage sets Content-Disposition: attachment when ?download is present.
-  return `${f.file_url}?download=${encodeURIComponent(name)}`;
-}
-
-function PlanDownloads({ files }: { files: PlanFile[] }) {
-  const [viewing, setViewing] = useState<PlanFile | null>(null);
-  if (files.length === 0) return null;
-
-  const thisMonth = firstOfMonth(todayISO());
-  const current = files.find((f) => f.month === thisMonth) ?? files[0];
-  const others = files.filter((f) => f.id !== current.id).slice(0, 5);
-  const isImage = (f: PlanFile) => !!f.mime_type?.startsWith('image/');
-  const titleOf = (f: PlanFile) => f.title || `${monthLabel(f.month)}ын хуваарь`;
-
-  return (
-    <div className="space-y-2">
-      <div className="rounded-3xl bg-white p-4 shadow-soft">
-        <div className="flex items-center gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
-            {isImage(current) ? <ImageIcon className="size-6" /> : <FileText className="size-6" />}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-slate-900">{titleOf(current)}</p>
-            <p className="text-sm text-slate-500">
-              {isImage(current) ? 'Зураг' : 'PDF'} · {monthLabel(current.month)}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setViewing(current)}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-slate-100 font-semibold text-slate-800 active:scale-[0.98]"
-          >
-            <Eye className="size-5" /> Харах
-          </button>
-          <a
-            href={downloadUrl(current)}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-700 font-semibold text-white active:scale-[0.98]"
-          >
-            <Download className="size-5" /> Татах
-          </a>
-        </div>
-      </div>
-
-      {others.length > 0 && (
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-          {others.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setViewing(f)}
-              className="flex min-h-10 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-medium text-slate-600 shadow-soft"
-            >
-              <Eye className="size-3.5" /> {monthLabel(f.month)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <FileViewer
-        open={!!viewing}
-        onClose={() => setViewing(null)}
-        title={viewing ? titleOf(viewing) : ''}
-        url={viewing?.file_url ?? ''}
-        downloadUrl={viewing ? downloadUrl(viewing) : ''}
-        isImage={!!viewing && isImage(viewing)}
-      />
-    </div>
-  );
-}
-
 
 /* ------------------------------------------------------ Calendar → PDF */
 
