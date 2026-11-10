@@ -302,6 +302,9 @@ export function toPayload(fields: FieldConfig[], values: FormValues): Row {
 export function friendlyError(message: string): string {
   if (message.includes('end_after_start')) return 'Дуусах огноо эхлэх огнооноос өмнө байна';
   if (message.includes('row-level security')) return 'Танд энэ үйлдлийг хийх эрх алга';
+  // The app knows a value the database doesn't accept yet: a migration in supabase/ hasn't been run.
+  if (message.includes('_check') && message.includes('violates check constraint'))
+    return 'Өгөгдлийн сан энэ утгыг хүлээж авахгүй байна. supabase/ хавтасны хамгийн сүүлийн SQL файлыг Supabase дээр ажиллуулна уу.';
   return message;
 }
 

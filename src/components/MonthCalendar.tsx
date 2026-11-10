@@ -8,8 +8,9 @@ export const CATEGORY_COLORS: Record<PlanCategory, { chip: string; dot: string; 
   word: { chip: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500', label: 'Үг' },
   school: { chip: 'bg-sky-100 text-sky-800', dot: 'bg-sky-500', label: 'Чуулганы сургууль' },
   fellowship: { chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500', label: 'Нөхөрлөл' },
+  gathering: { chip: 'bg-orange-100 text-orange-800', dot: 'bg-orange-500', label: 'Цугларалт' },
 };
-/** Display order: Семинар, Үг, Чуулганы сургууль, Нөхөрлөл (then uncategorised). */
+/** Display order: Семинар, Үг, Чуулганы сургууль, Нөхөрлөл, Цугларалт (then uncategorised). */
 export const categoryRank = (c: PlanCategory | null) => {
   const i = c ? Object.keys(CATEGORY_COLORS).indexOf(c) : -1;
   return i < 0 ? 99 : i;

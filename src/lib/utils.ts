@@ -87,6 +87,11 @@ export function sortDistricts(a: string, b: string): number {
 
 export const WEEKDAYS_SHORT_MN = ['Ня', 'Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя'];
 
+/** Whole days from one ISO date to another (negative when `toISO` is earlier). */
+export function daysBetween(fromISO: string, toISO: string): number {
+  return Math.round((parseISODate(toISO).getTime() - parseISODate(fromISO).getTime()) / 86_400_000);
+}
+
 /** "Мя" */
 export function weekdayShort(iso: string): string {
   return WEEKDAYS_SHORT_MN[parseISODate(iso).getDay()];

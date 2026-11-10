@@ -51,7 +51,11 @@ const PLAN_CATEGORY_LABEL: Record<string, string> = {
   word: 'Үг',
   school: 'Чуулганы сургууль',
   fellowship: 'Нөхөрлөл',
+  gathering: 'Цугларалт',
 };
+
+/** Categories whose events can run over several days. */
+const multiDayCat = (v: FormValues) => cat(v) === 'seminar' || cat(v) === 'gathering';
 
 /* ------------------------------------------------------------------ tables */
 
@@ -170,6 +174,7 @@ const plans: TableConfig = {
         { value: 'word', label: 'Үг' },
         { value: 'school', label: 'Чуулганы сургууль' },
         { value: 'fellowship', label: 'Нөхөрлөл' },
+        { value: 'gathering', label: 'Цугларалт' },
       ],
     },
     {
@@ -177,20 +182,27 @@ const plans: TableConfig = {
       label: 'Бүлэг',
       type: 'text',
       placeholder: 'Залуучууд, Ээжүүд, Хэсгийн…',
-      showIf: (v) => cat(v) === 'fellowship',
+      showIf: (v) => cat(v) === 'fellowship' || cat(v) === 'gathering',
     },
     {
       key: 'title',
-      label: (v) => ({ seminar: 'Семинарын нэр', fellowship: 'Сэдэв', school: 'Анги' })[cat(v)] ?? 'Нэр',
+      label: (v) => ({ seminar: 'Семинарын нэр', fellowship: 'Сэдэв', gathering: 'Цугларалтын нэр', school: 'Анги' })[cat(v)] ?? 'Нэр',
       type: 'text',
       required: true,
     },
-    { key: 'event_date', label: (v) => (cat(v) === 'seminar' ? 'Эхлэх огноо' : 'Огноо'), type: 'date', required: true },
-    { key: 'end_date', label: 'Дуусах огноо', type: 'date', showIf: (v) => cat(v) === 'seminar' },
+    { key: 'event_date', label: (v) => (multiDayCat(v) ? 'Эхлэх огноо' : 'Огноо'), type: 'date', required: true },
+    {
+      key: 'end_date',
+      label: 'Дуусах огноо',
+      type: 'date',
+      showIf: multiDayCat,
+      hint: 'Нэг өдрийн бол хоосон орхино',
+    },
     { key: 'time', label: 'Цаг', type: 'text', placeholder: '10:00–17:00' },
     {
       key: 'speaker',
-      label: (v) => ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч', word: 'Номлогч', school: 'Багш' })[cat(v)] ?? 'Хариуцагч',
+      label: (v) =>
+        ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч', gathering: 'Удирдагч', word: 'Номлогч', school: 'Багш' })[cat(v)] ?? 'Хариуцагч',
       type: 'text',
     },
     { key: 'location', label: 'Байршил', type: 'tags' },

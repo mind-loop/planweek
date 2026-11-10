@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, GraduationCap, MapPin, UserRound } from 'lucide-react';
+import { CalendarDays, ChevronRight, GraduationCap, MapPin, UserRound, Users } from 'lucide-react';
 import { useBulletin } from '../../context/DataContext';
 import { addDays, cn, dotDate, longDate, parseISODate, todayISO, weekdayMn } from '../../lib/utils';
 import { categoryRank, categoryStyle, isMultiDay } from '../../components/MonthCalendar';
@@ -14,17 +14,19 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
   const until = addDays(today, DAYS_AHEAD);
   const plans = result?.data.plans ?? [];
 
-  // Everything except seminars (those get the banner); each item shows its category colour.
+  // Everything except seminars and multi-day events (those get a strip on top); each item shows its category colour.
   const items = plans
-    .filter((p) => p.category !== 'seminar' && p.event_date >= today && p.event_date <= until)
+    .filter((p) => p.category !== 'seminar' && !isMultiDay(p) && p.event_date >= today && p.event_date <= until)
     .sort(
       (a, b) =>
         a.event_date.localeCompare(b.event_date) ||
         (a.time ?? '').localeCompare(b.time ?? '') ||
         categoryRank(a.category) - categoryRank(b.category),
     );
-  // A multi-day seminar this week explains quiet days, so show it on top.
-  const seminars = plans.filter((p) => p.category === 'seminar' && isMultiDay(p) && p.event_date <= until && p.end_date! >= today);
+  // Multi-day seminars / gatherings this week explain quiet days, so show them on top.
+  const seminars = plans
+    .filter((p) => isMultiDay(p) && p.event_date <= until && p.end_date! >= today)
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
   if (items.length === 0 && seminars.length === 0) return null;
 
@@ -46,20 +48,32 @@ export function WeekProgramSection({ onNavigate }: { onNavigate: (tab: TabId) =>
       </p>
 
       <div className="space-y-3">
-        {seminars.map((s) => (
-          <div key={s.id} className="flex items-center gap-3 rounded-3xl bg-indigo-50 px-4 py-3.5 ring-1 ring-indigo-100">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-indigo-600 text-white">
-              <GraduationCap className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-indigo-950">{s.title}</p>
-              <p className="text-sm text-indigo-700">
-                {dotDate(s.event_date)} – {dotDate(s.end_date!)}
-                {s.time && ` · ${s.time}`}
-              </p>
+        {seminars.map((s) => {
+          const gathering = s.category !== 'seminar';
+          const Icon = gathering ? Users : GraduationCap;
+          return (
+            <div
+              key={s.id}
+              className={cn(
+                'flex items-center gap-3 rounded-3xl px-4 py-3.5 ring-1',
+                gathering ? 'bg-orange-50 ring-orange-100' : 'bg-indigo-50 ring-indigo-100',
+              )}
+            >
+              <span
+                className={cn('grid size-11 shrink-0 place-items-center rounded-2xl text-white', gathering ? 'bg-orange-500' : 'bg-indigo-600')}
+              >
+                <Icon className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className={cn('truncate font-semibold', gathering ? 'text-orange-950' : 'text-indigo-950')}>{s.title}</p>
+                <p className={cn('text-sm', gathering ? 'text-orange-700' : 'text-indigo-700')}>
+                  {categoryStyle(s.category).label} · {dotDate(s.event_date)} – {dotDate(s.end_date!)}
+                  {s.time && ` · ${s.time}`}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {days.map((date) => {
           const isToday = date === today;

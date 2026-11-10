@@ -41,7 +41,7 @@ export interface MemoryVerse {
   created_at?: string;
 }
 
-export type PlanCategory = 'seminar' | 'word' | 'school' | 'fellowship';
+export type PlanCategory = 'seminar' | 'word' | 'school' | 'fellowship' | 'gathering';
 
 export interface MonthlyPlan {
   id: string;
@@ -52,11 +52,11 @@ export interface MonthlyPlan {
   speaker: string | null;
   location: string | null;
   notes: string | null;
-  /** Семинар / Үг / Чуулганы сургууль / Нөхөрлөл */
+  /** Семинар / Үг / Чуулганы сургууль / Нөхөрлөл / Цугларалт */
   category: PlanCategory | null;
-  /** Семинар: last day (multi-day events). */
+  /** Семинар, Цугларалт: last day (multi-day events). */
   end_date: string | null;
-  /** Нөхөрлөл: which group, e.g. "Залуучууд". */
+  /** Нөхөрлөл, Цугларалт: which group, e.g. "Залуучууд". */
   group_name: string | null;
   image_url: string | null;
   created_at?: string;

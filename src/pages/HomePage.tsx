@@ -9,6 +9,7 @@ import { HomeBanner } from './home/HomeBanner';
 import { VerseSection } from './home/VerseSection';
 import { WeekProgramSection } from './home/WeekProgramSection';
 import { ServiceSection } from './home/ServiceSection';
+import { SeminarsSection } from './home/SeminarsSection';
 import { CleaningSection } from './home/CleaningSection';
 import { AnnouncementSheet, NoticesSection } from './home/Notices';
 
@@ -50,6 +51,8 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
       <VerseSection verses={verses} />
 
       <WeekProgramSection onNavigate={onNavigate} />
+
+      <SeminarsSection />
 
       <ServiceSection />
 

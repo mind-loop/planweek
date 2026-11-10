@@ -44,9 +44,9 @@ export function PlanDetailSheet({ plan, onClose, footer }: { plan: MonthlyPlan |
             )}
             {plan.speaker && (
               <Row
-                icon={plan.category === 'fellowship' || plan.category === 'school' ? <Users /> : <Mic />}
+                icon={plan.category === 'fellowship' || plan.category === 'gathering' || plan.category === 'school' ? <Users /> : <Mic />}
                 label={
-                  ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч', word: 'Номлогч', school: 'Багш' } as Record<string, string>)[plan.category ?? ''] ??
+                  ({ seminar: 'Пастор / Багш', fellowship: 'Удирдагч', gathering: 'Удирдагч', word: 'Номлогч', school: 'Багш' } as Record<string, string>)[plan.category ?? ''] ??
                   'Хариуцагч'
                 }
               >

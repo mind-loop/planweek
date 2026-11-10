@@ -25,6 +25,7 @@ const TEXT_COLOR: Record<PlanCategory | 'none', string> = {
   word: '#c62828',
   school: '#1565c0',
   fellowship: '#1b5e20',
+  gathering: '#e65100',
   none: '#111827',
 };
 const BAR_COLOR: Record<PlanCategory | 'none', { fill: string; stroke: string; text: string }> = {
@@ -32,6 +33,7 @@ const BAR_COLOR: Record<PlanCategory | 'none', { fill: string; stroke: string; t
   word: { fill: '#ffcdd2', stroke: '#e57373', text: '#5d0f0f' },
   school: { fill: '#bbdefb', stroke: '#64b5f6', text: '#0d2c4d' },
   fellowship: { fill: '#e1bee7', stroke: '#ba68c8', text: '#3b0d45' },
+  gathering: { fill: '#ffe0b2', stroke: '#ffb74d', text: '#4e2600' },
   none: { fill: '#e5e7eb', stroke: '#9ca3af', text: '#111827' },
 };
 
@@ -261,6 +263,7 @@ export async function renderMonthCanvas(month: string, allPlans: MonthlyPlan[], 
     ['Үг', TEXT_COLOR.word],
     ['Чуулганы сургууль', TEXT_COLOR.school],
     ['Нөхөрлөл', TEXT_COLOR.fellowship],
+    ['Цугларалт', TEXT_COLOR.gathering],
   ];
   ctx.font = `700 22px ${FONT}`;
   ctx.textAlign = 'left';

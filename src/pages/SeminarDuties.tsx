@@ -3,7 +3,7 @@ import { GraduationCap, MapPin, Table2, Users } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useDistrict } from '../context/DistrictContext';
 import { SEMINAR_DUTY_META, SEMINAR_DUTY_ORDER, seminarDays } from '../lib/duty';
-import { cn, dotDate, parseISODate, todayISO, weekdayMn, weekdayShort } from '../lib/utils';
+import { cn, daysBetween, dotDate, parseISODate, todayISO, weekdayMn, weekdayShort } from '../lib/utils';
 import type { SeminarDailyDuty } from '../types/database';
 import { Accordion, EmptyState } from '../components/ui';
 
@@ -19,10 +19,6 @@ const isDistrictList = (v: string) => /^[\d\s,]+$/.test(v);
 function defaultDay(days: string[]): string | undefined {
   const today = todayISO();
   return days.find((d) => d >= today) ?? days[0];
-}
-
-function daysBetween(fromISO: string, toISO: string): number {
-  return Math.round((parseISODate(toISO).getTime() - parseISODate(fromISO).getTime()) / 86_400_000);
 }
 
 function statusLabel(days: string[]): { text: string; live: boolean } {

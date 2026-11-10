@@ -1,12 +1,26 @@
 import { GraduationCap } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
-import { cn, dotDate, splitList, todayISO, weekdayShort } from '../lib/utils';
+import { cn, daysBetween, dotDate, splitList, todayISO, weekdayShort } from '../lib/utils';
 import type { NationalSeminar } from '../types/database';
 import { EmptyState } from '../components/ui';
 
 /** "УВС БАПТИСТ ЧУУЛГАН" → "увс": matched against church names in the schedule. */
-function homeKey(churchName: string | undefined): string {
+export function homeKey(churchName: string | undefined): string {
   return (churchName ?? 'Увс').trim().split(/\s+/)[0].toLowerCase();
+}
+
+/** Does this seminar include our own church? */
+export function isOurSeminar(seminar: NationalSeminar, home: string): boolean {
+  return splitList(seminar.churches).some((c) => c.toLowerCase() === home);
+}
+
+/** "Өнөөдөр эхэлнэ" / "Маргааш эхэлнэ" / "3 хоногийн дараа" — null once it has started. */
+function countdown(startISO: string, today: string): string | null {
+  const n = daysBetween(today, startISO);
+  if (n < 0) return null;
+  if (n === 0) return 'Өнөөдөр эхэлнэ';
+  if (n === 1) return 'Маргааш эхэлнэ';
+  return `${n} хоногийн дараа`;
 }
 
 /** Монгол чуулганы Библийн семинар — which churches attend when. */
@@ -40,12 +54,13 @@ export function SeminarSchedule() {
   );
 }
 
-function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: string; delay: number }) {
+export function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: string; delay: number }) {
   const today = todayISO();
   const churches = splitList(seminar.churches);
-  const ours = churches.some((c) => c.toLowerCase() === home);
+  const ours = isOurSeminar(seminar, home);
   const live = seminar.start_date <= today && today <= seminar.end_date;
   const past = seminar.end_date < today;
+  const soon = !live && !past ? countdown(seminar.start_date, today) : null;
 
   return (
     <li
@@ -75,7 +90,7 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
       </div>
 
       <div className="min-w-0 flex-1 py-0.5">
-        {(ours || live) && (
+        {(ours || live || soon || past) && (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {ours && <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">Манай чуулган</span>}
             {live && (
@@ -83,6 +98,8 @@ function SeminarRow({ seminar, home, delay }: { seminar: NationalSeminar; home: 
                 <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" /> Явагдаж байна
               </span>
             )}
+            {soon && <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">{soon}</span>}
+            {past && <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">Дууссан</span>}
           </div>
         )}
         <div className="flex flex-wrap gap-1.5">
