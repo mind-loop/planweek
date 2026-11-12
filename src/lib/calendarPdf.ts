@@ -292,9 +292,20 @@ export async function downloadMonthPdf(month: string, plans: MonthlyPlan[], chur
   const h = canvas.height * scale;
   pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pageW - w) / 2, 0, w, h);
 
-  const filename = `Төлөвлөгөө-${month}.pdf`;
-  const blob = pdf.output('blob');
-  const file = new File([blob], filename, { type: 'application/pdf' });
+  await saveFile(pdf.output('blob'), `Төлөвлөгөө-${month}.pdf`, 'application/pdf');
+}
+
+/** Same drawing as a PNG picture (easy to save to Photos or send in a chat). */
+export async function downloadMonthPng(month: string, plans: MonthlyPlan[], churchName: string): Promise<void> {
+  const canvas = await renderMonthCanvas(month, plans, churchName);
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+  if (!blob) throw new Error('Зураг үүсгэж чадсангүй');
+  await saveFile(blob, `Төлөвлөгөө-${month}.png`, 'image/png');
+}
+
+/** iPhone: opens the share sheet («Файлд хадгалах» / «Зураг хадгалах»); elsewhere a normal download. */
+async function saveFile(blob: Blob, filename: string, type: string): Promise<void> {
+  const file = new File([blob], filename, { type });
   if (isIOS() && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: filename });
@@ -303,6 +314,13 @@ export async function downloadMonthPdf(month: string, plans: MonthlyPlan[], chur
       if ((e as DOMException).name === 'AbortError') return; // user closed the sheet
     }
   }
-  pdf.save(filename);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 

@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { ChevronRight, FileDown, LoaderCircle } from 'lucide-react';
+import { ChevronRight, FileImage, FileText, LoaderCircle } from 'lucide-react';
 import { useBulletin } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
-import { useIsAdmin } from '../lib/useIsAdmin';
 import { cn, longDate, monthLabel, todayISO, weekdayMn } from '../lib/utils';
 import type { MonthlyPlan, PlanCategory } from '../types/database';
 import { CATEGORY_COLORS, MonthCalendar, categoryStyle, plansByDate } from '../components/MonthCalendar';
@@ -20,7 +19,6 @@ export function PlanPage() {
   const [selected, setSelected] = useState<string | null>(today);
   const [open, setOpen] = useState<MonthlyPlan | null>(null);
   const plans = result?.data.plans ?? [];
-  const isAdmin = useIsAdmin(); // PDF export is for admins only
 
   const visible = filter === 'all' ? plans : plans.filter((p) => p.category === filter);
   const events = useMemo(() => plansByDate(visible), [visible]);
@@ -63,7 +61,7 @@ export function PlanPage() {
         events={events}
         selected={selected}
         onSelect={setSelected}
-        footerAction={isAdmin && <MonthPdfButton month={month} plans={plans} churchName={result?.data.churchInfo.church_name ?? 'УВС'} />}
+        footerAction={<MonthPdfButton month={month} plans={plans} churchName={result?.data.churchInfo.church_name ?? 'УВС'} />}
       />
 
       {/* Selected day */}
@@ -102,38 +100,57 @@ export function PlanPage() {
   );
 }
 
-/* ------------------------------------------------------ Calendar → PDF */
+/* ------------------------------------------------- Calendar → PDF / PNG */
 
-/** Admin-only: prints the month shown on the calendar as an A4 PDF (church calendar layout). */
+type Format = 'pdf' | 'png';
+
+/**
+ * Saves the month shown on the calendar in the church's printed layout.
+ * Icon-only buttons (PDF = document, PNG = picture); labels stay for screen readers.
+ */
 export function MonthPdfButton({ month, plans, churchName }: { month: string; plans: MonthlyPlan[]; churchName: string }) {
   const toast = useToast();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Format | null>(null);
   const count = plans.filter((p) => p.event_date.startsWith(month) || (p.end_date ?? '').startsWith(month)).length;
   if (count === 0) return null;
 
-  const download = async () => {
-    setBusy(true);
+  const download = async (format: Format) => {
+    if (busy) return;
+    setBusy(format);
     try {
-      const { downloadMonthPdf } = await import('../lib/calendarPdf');
-      await downloadMonthPdf(month, plans, churchName);
+      const lib = await import('../lib/calendarPdf');
+      await (format === 'pdf' ? lib.downloadMonthPdf : lib.downloadMonthPng)(month, plans, churchName);
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'PDF үүсгэж чадсангүй', 'error');
+      toast(e instanceof Error ? e.message : 'Татаж чадсангүй', 'error');
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
+  const name = monthLabel(`${month}-01`);
+  const buttons: { format: Format; icon: typeof FileText; label: string; className: string }[] = [
+    { format: 'pdf', icon: FileText, label: `${name}ын төлөвлөгөөг PDF-ээр татах`, className: 'bg-red-50 text-red-600 ring-red-100' },
+    { format: 'png', icon: FileImage, label: `${name}ын төлөвлөгөөг зургаар (PNG) татах`, className: 'bg-sky-50 text-sky-600 ring-sky-100' },
+  ];
+
   return (
-    <button
-      type="button"
-      onClick={download}
-      disabled={busy}
-      aria-label={`${monthLabel(`${month}-01`)}ын төлөвлөгөөг PDF-ээр татах`}
-      title="PDF татах"
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-cyan-700 px-3 text-sm font-semibold text-white transition active:scale-95 disabled:opacity-60"
-    >
-      {busy ? <LoaderCircle className="size-4 animate-spin" /> : <FileDown className="size-4" />}
-      PDF
-    </button>
+    <div className="flex shrink-0 gap-1.5">
+      {buttons.map(({ format, icon: Icon, label, className }) => (
+        <button
+          key={format}
+          type="button"
+          onClick={() => void download(format)}
+          disabled={busy !== null}
+          aria-label={label}
+          title={format === 'pdf' ? 'PDF татах' : 'PNG татах'}
+          className={cn(
+            'grid size-11 place-items-center rounded-full ring-1 transition active:scale-90 disabled:opacity-50',
+            className,
+          )}
+        >
+          {busy === format ? <LoaderCircle className="size-5 animate-spin" /> : <Icon className="size-5" />}
+        </button>
+      ))}
+    </div>
   );
 }
