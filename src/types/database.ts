@@ -13,6 +13,10 @@ export interface ChurchInfo {
   phone: string | null;
   address: string | null;
   map_url: string | null;
+  /** Цээжлэх эшлэл rotation: verse id (in the JSON verse book) shown in `verse_anchor_week`. */
+  verse_anchor_id?: number | null;
+  /** Sunday of the week `verse_anchor_id` belongs to; later weeks take the following verses. */
+  verse_anchor_week?: string | null;
   updated_at?: string;
 }
 

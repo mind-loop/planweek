@@ -33,7 +33,8 @@ export default defineConfig({
       workbox: {
         // index.html is NOT precached: an installed iPhone app would otherwise keep
         // opening an old copy (missing new logos/banners). Pages go network-first below.
-        globPatterns: ['**/*.{js,css,svg,png,jpg,woff2}'],
+        // json = the memory-verse book, so verses still show offline.
+        globPatterns: ['**/*.{js,css,svg,png,jpg,woff2,json}'],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

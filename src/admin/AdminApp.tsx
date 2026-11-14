@@ -27,6 +27,7 @@ import { CleaningAreasPanel } from './CleaningAreasPanel';
 import { PlanCalendarPanel } from './PlanCalendarPanel';
 import { NationalSeminarsPanel } from './NationalSeminarsPanel';
 import { BulletinPanel } from './BulletinPanel';
+import { VersePanel } from './VersePanel';
 import { RecurringFillButton } from './RecurringFill';
 
 export type Row = Record<string, unknown> & { id?: string | number };
@@ -235,7 +236,9 @@ function AdminDashboard({ email }: { email: string }) {
       )}
 
       {'panel' in section ? (
-        section.panel === 'bulletin' ? (
+        section.panel === 'verses' ? (
+          <VersePanel />
+        ) : section.panel === 'bulletin' ? (
           <BulletinPanel />
         ) : section.panel === 'national' ? (
           <NationalSeminarsPanel />
@@ -299,6 +302,9 @@ export function toPayload(fields: FieldConfig[], values: FormValues): Row {
 export function friendlyError(message: string): string {
   if (message.includes('end_after_start')) return 'Дуусах огноо эхлэх огнооноос өмнө байна';
   if (message.includes('row-level security')) return 'Танд энэ үйлдлийг хийх эрх алга';
+  // A column the app writes doesn't exist yet: the same "run the latest migration" cause.
+  if (message.includes('column') && message.includes('schema cache'))
+    return 'Өгөгдлийн санд шинэ багана алга байна. supabase/ хавтасны хамгийн сүүлийн SQL файлыг Supabase дээр ажиллуулна уу.';
   // The app knows a value the database doesn't accept yet: a migration in supabase/ hasn't been run.
   if (message.includes('_check') && message.includes('violates check constraint'))
     return 'Өгөгдлийн сан энэ утгыг хүлээж авахгүй байна. supabase/ хавтасны хамгийн сүүлийн SQL файлыг Supabase дээр ажиллуулна уу.';

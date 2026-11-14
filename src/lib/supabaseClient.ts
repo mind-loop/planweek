@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { BulletinData, ChurchInfo } from '../types/database';
 import { buildMockData } from './mockData';
 import { addDays, firstOfMonth, todayISO } from './utils';
+import { loadVerseBook, rotationVerses, weekSunday } from './verseBook';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -62,6 +63,8 @@ export async function fetchBulletin(): Promise<BulletinResult> {
   const errors: string[] = [];
   const db = supabase;
   const today = todayISO();
+  // Started right away (cached + precached); only used when an anchor verse is set.
+  const verseBook = loadVerseBook().catch((e: unknown) => e);
 
   const [
     [infoRows, infoSrc],
@@ -116,11 +119,29 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     ),
   ]);
 
+  // Цээжлэх эшлэл: the admin's anchor in church_info drives a weekly rotation through the
+  // verse book. Without one (or if the book can't load) the memory_verses table is used.
+  const info = infoRows[0];
+  let verseRows = verses;
+  let verseRowsSrc = verseSrc;
+  if (info.verse_anchor_id && info.verse_anchor_week) {
+    const book = await verseBook;
+    if (Array.isArray(book)) {
+      const rotated = rotationVerses(book, info.verse_anchor_id, info.verse_anchor_week, addDays(weekSunday(today), -14), 6);
+      if (rotated.length) {
+        verseRows = rotated;
+        verseRowsSrc = 'live';
+      }
+    } else {
+      errors.push(`verse book: ${book instanceof Error ? book.message : String(book)}`);
+    }
+  }
+
   return {
     data: {
-      churchInfo: infoRows[0],
+      churchInfo: info,
       announcements,
-      verses,
+      verses: verseRows,
       plans,
       duties,
       cleaning: cleaning.map((c) => ({ ...c, tasks: c.tasks ?? [] })),
@@ -131,7 +152,7 @@ export async function fetchBulletin(): Promise<BulletinResult> {
     sources: {
       churchInfo: infoSrc,
       announcements: annSrc,
-      verses: verseSrc,
+      verses: verseRowsSrc,
       plans: planSrc,
       duties: dutySrc,
       cleaning: cleaningSrc,

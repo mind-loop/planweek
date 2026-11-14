@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { TableName } from '../types/database';
-import { dotDate, shortDate, upcomingSunday } from '../lib/utils';
+import { dotDate, shortDate } from '../lib/utils';
 
 export type FieldType = 'text' | 'textarea' | 'date' | 'number' | 'checkbox' | 'select' | 'choice' | 'lines' | 'tags' | 'image';
 
@@ -135,18 +135,6 @@ const banners: TableConfig = {
   ],
 };
 
-const verses: TableConfig = {
-  table: 'memory_verses',
-  label: 'Эшлэл',
-  orderBy: { column: 'week_start', ascending: false },
-  title: (r) => s(r.reference),
-  subtitle: (r) => shortDate(s(r.week_start)),
-  fields: [
-    { key: 'reference', label: 'Эшлэл', type: 'text', required: true, placeholder: 'Дуулал 4:7' },
-    { key: 'text', label: 'Текст', type: 'textarea', required: true },
-    { key: 'week_start', label: 'Долоо хоног (Ням)', type: 'date', required: true, default: () => upcomingSunday() },
-  ],
-};
 
 /** One form, three shapes: the visible fields follow the chosen category. */
 const plans: TableConfig = {
@@ -228,14 +216,13 @@ export const ADMIN_TABLES: TableConfig[] = [
   churchInfo,
   announcements,
   banners,
-  verses,
   plans,
 ];
 
 /* ------------------------------------------------------------------ groups */
 
 /** A sub-section is a table, or one of the custom panels. */
-export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' | 'bulletin' });
+export type AdminSection = { id: string; label: string } & ({ table: TableConfig } | { panel: 'verses' | 'admins' | 'dutyGrid' | 'seminarGrid' | 'cleaning' | 'planCalendar' | 'national' | 'bulletin' });
 
 export interface AdminGroup {
   id: string;
@@ -255,7 +242,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: 'banners', label: 'Баннер', table: banners },
     ],
   },
-  { id: 'verse', label: 'Эшлэл', icon: BookMarked, sections: [{ id: 'verses', label: 'Эшлэл', table: verses }] },
+  { id: 'verse', label: 'Эшлэл', icon: BookMarked, sections: [{ id: 'verses', label: 'Эшлэл', panel: 'verses' }] },
   {
     id: 'plan',
     label: 'Төлөвлөгөө',
